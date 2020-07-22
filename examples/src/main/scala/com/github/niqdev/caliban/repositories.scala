@@ -112,15 +112,15 @@ object repositories {
       private[this] val tableName  = "repository"
       private[this] val tableFrom  = Fragment.const(s" FROM $schemaName.$tableName ")
       private[this] val columns    = Fragment.const(s"id, user_id, name, url, is_fork, created_at, updated_at")
+      private[this] val nop        = fr""
 
       @scala.annotation.nowarn
       private[this] def findAll(
         extraColumns: Option[Fragment] = None,
         where: Option[Fragment] = None
       ): Fragment =
-        fr"SELECT " ++ columns ++ extraColumns.getOrElse(fr"") ++ tableFrom ++ where.getOrElse(
-          fr""
-        ) ++ fr" ORDER BY updated_at"
+        fr"SELECT " ++ columns ++ extraColumns.getOrElse(nop) ++
+          tableFrom ++ where.getOrElse(nop) ++ fr" ORDER BY updated_at"
 
       private[this] def find(
         limit: Limit,

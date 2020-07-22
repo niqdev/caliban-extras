@@ -1,7 +1,6 @@
 lazy val V = new {
   val scalaVersion = "2.13.3"
 
-  // examples
   val catsCore   = "2.1.1"
   val catsEffect = "2.1.4"
   val http4s     = "0.21.6"
@@ -31,7 +30,14 @@ lazy val core = project
   .in(file("modules/core"))
   .settings(commonSettings)
   .settings(
-    name := "caliban-extras-core"
+    name := "caliban-extras-core",
+    libraryDependencies ++= Seq(
+      "org.typelevel"  %% "cats-core"  % V.catsCore,
+      "io.estatico"    %% "newtype"    % V.newtype,
+      "eu.timepit"     %% "refined"    % V.refined,
+      "org.scalatest"  %% "scalatest"  % V.scalatest  % Test,
+      "org.scalacheck" %% "scalacheck" % V.scalacheck % Test
+    )
   )
 
 lazy val doobie = project
@@ -48,7 +54,6 @@ lazy val examples = project
   .settings(
     name := "caliban-extras-examples",
     libraryDependencies ++= Seq(
-      "org.typelevel"         %% "cats-core"           % V.catsCore,
       "org.typelevel"         %% "cats-effect"         % V.catsEffect,
       "org.http4s"            %% "http4s-dsl"          % V.http4s,
       "org.http4s"            %% "http4s-blaze-server" % V.http4s,
@@ -59,8 +64,6 @@ lazy val examples = project
       "com.github.ghostdogpr" %% "caliban"             % V.caliban,
       "com.github.ghostdogpr" %% "caliban-http4s"      % V.caliban,
       "com.github.ghostdogpr" %% "caliban-cats"        % V.caliban,
-      "io.estatico"           %% "newtype"             % V.newtype,
-      "eu.timepit"            %% "refined"             % V.refined,
       "io.laserdisc"          %% "log-effect-fs2"      % V.logEffect,
       "ch.qos.logback"         % "logback-classic"     % V.logback    % Runtime,
       "org.scalatest"         %% "scalatest"           % V.scalatest  % Test,

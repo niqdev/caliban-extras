@@ -5,15 +5,15 @@ import java.time.Instant
 import caliban.CalibanError
 import caliban.Value.{ IntValue, StringValue }
 import caliban.interop.cats.CatsInterop
+import caliban.pagination.Base64String
 import caliban.schema.Annotations.GQLInterface
 import caliban.schema.{ ArgBuilder, Schema }
 import cats.effect.Effect
 import cats.syntax.either._
 import com.github.niqdev.caliban.schema._
 import com.github.niqdev.caliban.schema.arguments._
-import eu.timepit.refined.W
-import eu.timepit.refined.api.{ Refined, RefinedTypeOps }
-import eu.timepit.refined.string.{ MatchesRegex, Url }
+import eu.timepit.refined.api.Refined
+import eu.timepit.refined.string.Url
 import eu.timepit.refined.types.numeric.{ NonNegInt, NonNegLong }
 import eu.timepit.refined.types.string.NonEmptyString
 import io.estatico.newtype.macros.newtype
@@ -37,13 +37,6 @@ object schema extends CommonSchemaInstances with CommonArgInstances {
       before: Option[Cursor]
     )
   }
-
-  // https://stackoverflow.com/questions/475074/regex-to-parse-or-validate-base64-data
-  final val Base64Regex = W(
-    """^(?:[A-Za-z0-9+/]{4})*(?:[A-Za-z0-9+/]{2}==|[A-Za-z0-9+/]{3}=|[A-Za-z0-9+/]{4})$"""
-  )
-  final type Base64String = String Refined MatchesRegex[Base64Regex.T]
-  final object Base64String extends RefinedTypeOps[Base64String, String]
 
   // TODO replace Offset with first/last
   @newtype case class Offset(value: NonNegInt)

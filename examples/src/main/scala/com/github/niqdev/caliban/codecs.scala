@@ -2,6 +2,7 @@ package com.github.niqdev.caliban
 
 import java.util.UUID
 
+import caliban.pagination.Base64String
 import cats.syntax.either._
 import com.github.niqdev.caliban.models._
 import com.github.niqdev.caliban.repositories._
