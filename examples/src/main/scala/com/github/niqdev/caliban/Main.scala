@@ -15,7 +15,6 @@ import zio.Runtime
 
 import scala.concurrent.ExecutionContext
 
-// sbt -jvm-debug 5005 "examples/runMain com.github.niqdev.caliban.Main"
 object Main extends IOApp {
 
   private[this] implicit val runtime: Runtime[Any] = Runtime.default
