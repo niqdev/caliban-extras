@@ -5,7 +5,7 @@ lazy val V = new {
 lazy val core = project
   .in(file("modules/core"))
   .settings(
-    name := "caliban-extras"
+    name := "caliban-extras-core"
   )
 
 lazy val doobie = project
@@ -25,6 +25,7 @@ lazy val root = project
   .in(file("."))
   .aggregate(core, doobie, examples)
   .settings(
+    name := "caliban-extras",
     organization := "com.github.niqdev",
     scalaVersion := V.scalaVersion,
     crossScalaVersions := Seq("2.12.12", V.scalaVersion),
