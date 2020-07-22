@@ -6,7 +6,7 @@ lazy val V = new {
   val catsEffect = "2.1.4"
   val http4s     = "0.21.6"
   val doobie     = "0.9.0"
-  val flyway     = "6.5.0"
+  val flyway     = "6.5.2"
   val caliban    = "0.9.0"
   val newtype    = "0.4.4"
   val refined    = "0.9.15"
@@ -18,14 +18,25 @@ lazy val V = new {
   val scalacheck = "1.14.3"
 }
 
+lazy val commonSettings = Seq(
+  organization := "com.github.niqdev",
+  scalaVersion := V.scalaVersion,
+  crossScalaVersions := Seq("2.12.12", V.scalaVersion),
+  scalacOptions ++= Seq(
+    "-Ymacro-annotations"
+  )
+)
+
 lazy val core = project
   .in(file("modules/core"))
+  .settings(commonSettings)
   .settings(
     name := "caliban-extras-core"
   )
 
 lazy val doobie = project
   .in(file("modules/doobie"))
+  .settings(commonSettings)
   .settings(
     name := "caliban-extras-doobie"
   )
@@ -33,6 +44,7 @@ lazy val doobie = project
 lazy val examples = project
   .in(file("examples"))
   .dependsOn(core, doobie)
+  .settings(commonSettings)
   .settings(
     name := "caliban-extras-examples",
     libraryDependencies ++= Seq(
@@ -61,9 +73,6 @@ lazy val root = project
   .aggregate(core, doobie, examples)
   .settings(
     name := "caliban-extras",
-    organization := "com.github.niqdev",
-    scalaVersion := V.scalaVersion,
-    crossScalaVersions := Seq("2.12.12", V.scalaVersion),
     addCommandAlias("checkFormat", ";scalafmtCheckAll;scalafmtSbtCheck"),
     addCommandAlias("format", ";scalafmtAll;scalafmtSbt"),
     addCommandAlias("build", ";checkFormat;clean;test")
