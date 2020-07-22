@@ -23,12 +23,22 @@ object codecs {
   object SchemaEncoder {
     def apply[A, B](implicit ev: SchemaEncoder[A, B]): SchemaEncoder[A, B] = ev
 
+    // TODO
     implicit lazy val cursorSchemaEncoder: SchemaEncoder[RowNumber, Cursor] =
       rowNumber =>
-        Cursor(Base64String.unsafeFrom(utils.toBase64(s"${Cursor.prefix}${rowNumber.value.value}")))
+        Base64String
+          .encodeWithPrefix(s"${rowNumber.value.value}", Cursor.prefix)
+          .map(Cursor.apply)
+          .toOption
+          .get
 
     implicit lazy val userNodeIdSchemaEncoder: SchemaEncoder[UserId, NodeId] =
-      model => NodeId(Base64String.unsafeFrom(utils.toBase64(s"${UserNode.idPrefix}${model.value.toString}")))
+      model =>
+        Base64String
+          .encodeWithPrefix(s"${model.value.toString}", UserNode.idPrefix)
+          .map(NodeId.apply)
+          .toOption
+          .get
 
     implicit def userNodeSchemaEncoder[F[_]](
       implicit uniSchemaEncoder: SchemaEncoder[UserId, NodeId]
@@ -45,7 +55,11 @@ object codecs {
 
     implicit lazy val repositoryNodeIdSchemaEncoder: SchemaEncoder[RepositoryId, NodeId] =
       model =>
-        NodeId(Base64String.unsafeFrom(utils.toBase64(s"${RepositoryNode.idPrefix}${model.value.toString}")))
+        Base64String
+          .encode(s"${RepositoryNode.idPrefix}${model.value.toString}")
+          .map(NodeId.apply)
+          .toOption
+          .get
 
     implicit def repositoryNodeSchemaEncoder[F[_]](
       implicit rniSchemaEncoder: SchemaEncoder[RepositoryId, NodeId]
@@ -88,22 +102,10 @@ object codecs {
   object SchemaDecoder {
     def apply[A, B](implicit ev: SchemaDecoder[A, B]): SchemaDecoder[A, B] = ev
 
-    private[this] def base64SchemaDecoder(prefix: String): SchemaDecoder[Base64String, String] =
-      schema => {
-        val base64String = utils.fromBase64(schema.value)
-        val errorMessage = s"invalid prefix: expected to start with [$prefix] but found [$base64String]"
-        Either
-          .cond(
-            base64String.startsWith(prefix),
-            utils.removePrefix(base64String, prefix),
-            new IllegalArgumentException(errorMessage)
-          )
-      }
-
     private[this] def uuidSchemaDecoder(prefix: String): SchemaDecoder[NodeId, UUID] =
       schema =>
-        base64SchemaDecoder(prefix)
-          .to(schema.value)
+        Base64String
+          .decodeWithoutPrefix(schema.value, prefix)
           .flatMap(uuidString => Either.catchNonFatal(UUID.fromString(uuidString)))
 
     implicit lazy val userIdSchemaDecoder: SchemaDecoder[NodeId, UserId] =
@@ -114,8 +116,8 @@ object codecs {
 
     implicit lazy val cursorSchemaDecoder: SchemaDecoder[Cursor, RowNumber] =
       schema =>
-        base64SchemaDecoder(Cursor.prefix)
-          .to(schema.value)
+        Base64String
+          .decodeWithoutPrefix(schema.value, Cursor.prefix)
           .flatMap(cursorString => Either.catchNonFatal(PosLong.unsafeFrom(cursorString.toLong)))
           .map(RowNumber.apply)
 

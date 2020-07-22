@@ -19,7 +19,7 @@ final class Base64StringSpec extends AnyWordSpecLike with Matchers {
     }
 
     "verify removePrefix" in {
-      Base64String.removePrefix("yyy:123", "xxx:", "yyy:") shouldBe "123"
+      Base64String.unsafeRemovePrefixes("yyy:123", "xxx:", "yyy:") shouldBe "123"
     }
   }
 }

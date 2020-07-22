@@ -18,25 +18,46 @@ package object pagination {
   final object Base64String extends RefinedTypeOps[Base64String, String] {
 
     /**
-      * Encodes from a plain String
+      * Encodes from plain String
       */
-    lazy val encode: String => Either[String, Base64String] =
+    lazy val encode: String => Either[Throwable, Base64String] =
       value =>
         Either
           .catchNonFatal(Base64.getEncoder.encodeToString(value.getBytes(StandardCharsets.UTF_8)))
-          .leftMap(_.getMessage)
-          .flatMap(Base64String.from)
+          .flatMap(base64String => Base64String.from(base64String).leftMap(new IllegalArgumentException(_)))
 
     /**
-      * Decodes to a plain String
+      * Encodes from plain String with a prefix
       */
-    lazy val decode: Base64String => Either[String, String] =
+    def encodeWithPrefix(value: String, prefix: String): Either[Throwable, Base64String] =
+      encode(s"$prefix$value")
+
+    /**
+      * Decodes to plain String
+      */
+    lazy val decode: Base64String => Either[Throwable, String] =
       base64String =>
         Either
           .catchNonFatal(new String(Base64.getDecoder.decode(base64String.value), StandardCharsets.UTF_8))
-          .leftMap(_.getMessage)
 
-    def removePrefix(value: String, prefixes: String*): String =
+    private[pagination] def unsafeRemovePrefixes(value: String, prefixes: String*): String =
       prefixes.foldLeft(value)((v, prefix) => v.replace(prefix, ""))
+
+    private[pagination] def removePrefix(value: String, prefix: String): Either[Throwable, String] = {
+      val errorMessage = s"invalid prefix: expected to start with [$prefix] but found [$value]"
+      Either
+        .cond(
+          value.startsWith(prefix),
+          unsafeRemovePrefixes(value, prefix),
+          new IllegalArgumentException(errorMessage)
+        )
+    }
+
+    /**
+      * Decodes to plain String and strip prefix
+      */
+    def decodeWithoutPrefix(base64String: Base64String, prefix: String): Either[Throwable, String] =
+      decode(base64String).flatMap(value => removePrefix(value, prefix))
+
   }
 }
