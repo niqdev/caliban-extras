@@ -32,11 +32,14 @@ lazy val core = project
   .settings(
     name := "caliban-extras-core",
     libraryDependencies ++= Seq(
-      "org.typelevel"  %% "cats-core"  % V.catsCore,
-      "io.estatico"    %% "newtype"    % V.newtype,
-      "eu.timepit"     %% "refined"    % V.refined,
-      "org.scalatest"  %% "scalatest"  % V.scalatest  % Test,
-      "org.scalacheck" %% "scalacheck" % V.scalacheck % Test
+      "org.typelevel"         %% "cats-core"    % V.catsCore,
+      "org.typelevel"         %% "cats-effect"  % V.catsEffect,
+      "com.github.ghostdogpr" %% "caliban"      % V.caliban,
+      "com.github.ghostdogpr" %% "caliban-cats" % V.caliban,
+      "io.estatico"           %% "newtype"      % V.newtype,
+      "eu.timepit"            %% "refined"      % V.refined,
+      "org.scalatest"         %% "scalatest"    % V.scalatest  % Test,
+      "org.scalacheck"        %% "scalacheck"   % V.scalacheck % Test
     )
   )
 
@@ -54,16 +57,13 @@ lazy val examples = project
   .settings(
     name := "caliban-extras-examples",
     libraryDependencies ++= Seq(
-      "org.typelevel"         %% "cats-effect"         % V.catsEffect,
       "org.http4s"            %% "http4s-dsl"          % V.http4s,
       "org.http4s"            %% "http4s-blaze-server" % V.http4s,
       "org.tpolecat"          %% "doobie-core"         % V.doobie,
       "org.tpolecat"          %% "doobie-refined"      % V.doobie,
       "org.tpolecat"          %% "doobie-h2"           % V.doobie,
       "org.flywaydb"           % "flyway-core"         % V.flyway,
-      "com.github.ghostdogpr" %% "caliban"             % V.caliban,
       "com.github.ghostdogpr" %% "caliban-http4s"      % V.caliban,
-      "com.github.ghostdogpr" %% "caliban-cats"        % V.caliban,
       "io.laserdisc"          %% "log-effect-fs2"      % V.logEffect,
       "ch.qos.logback"         % "logback-classic"     % V.logback    % Runtime,
       "org.scalatest"         %% "scalatest"           % V.scalatest  % Test,

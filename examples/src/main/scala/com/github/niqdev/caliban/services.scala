@@ -1,5 +1,6 @@
 package com.github.niqdev.caliban
 
+import caliban.pagination.schemas._
 import cats.effect.{ Resource, Sync }
 import cats.instances.list._
 import cats.instances.option._
@@ -8,11 +9,11 @@ import cats.syntax.flatMap._
 import cats.syntax.foldable._
 import cats.syntax.functor._
 import cats.syntax.nested._
+import com.github.niqdev.caliban.arguments.RepositoriesArg
 import com.github.niqdev.caliban.codecs._
 import com.github.niqdev.caliban.models._
 import com.github.niqdev.caliban.repositories._
 import com.github.niqdev.caliban.schema._
-import com.github.niqdev.caliban.schema.arguments.ForwardPaginationArg
 import eu.timepit.refined.types.string.NonEmptyString
 
 object services {
@@ -75,10 +76,10 @@ object services {
       repositoryRepo.findByName(name).nested.map(toNode).value
 
     // TODO
-    def connection(maybeUserId: Option[UserId]): ForwardPaginationArg => F[RepositoryConnection[F]] =
+    def connection(maybeUserId: Option[UserId]): RepositoriesArg => F[RepositoryConnection[F]] =
       paginationArg =>
         for {
-          limit <- F.fromEither(SchemaDecoder[Offset, Limit].to(paginationArg.first))
+          limit <- F.fromEither(SchemaDecoder[First, Limit].to(paginationArg.first))
           nextRowNumber <- F.fromEither(
             SchemaDecoder[Option[Cursor], Option[RowNumber]].to(paginationArg.after)
           )

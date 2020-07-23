@@ -3,11 +3,12 @@ package com.github.niqdev.caliban
 import java.util.UUID
 
 import caliban.pagination.Base64String
+import caliban.pagination.schemas.{ Cursor, First, NodeId }
 import cats.syntax.either._
+import com.github.niqdev.caliban.arguments.RepositoriesArg
 import com.github.niqdev.caliban.models._
 import com.github.niqdev.caliban.repositories._
 import com.github.niqdev.caliban.schema._
-import com.github.niqdev.caliban.schema.arguments._
 import eu.timepit.refined.types.numeric.PosLong
 
 // TODO SchemaDecoderOps + move instances in sealed traits
@@ -42,7 +43,7 @@ object codecs {
 
     implicit def userNodeSchemaEncoder[F[_]](
       implicit uniSchemaEncoder: SchemaEncoder[UserId, NodeId]
-    ): SchemaEncoder[(User, ForwardPaginationArg => F[RepositoryConnection[F]]), UserNode[F]] = {
+    ): SchemaEncoder[(User, RepositoriesArg => F[RepositoryConnection[F]]), UserNode[F]] = {
       case (user, getRepositoryConnectionF) =>
         UserNode(
           id = uniSchemaEncoder.from(user.id),
@@ -118,10 +119,10 @@ object codecs {
       schema =>
         Base64String
           .decodeWithoutPrefix(schema.value, Cursor.prefix)
-          .flatMap(cursorString => Either.catchNonFatal(PosLong.unsafeFrom(cursorString.toLong)))
+          .flatMap(cursorString => PosLong.from(cursorString.toLong).leftMap(new IllegalArgumentException(_)))
           .map(RowNumber.apply)
 
-    implicit lazy val offsetSchemaDecoder: SchemaDecoder[Offset, Limit] =
+    implicit lazy val firstSchemaDecoder: SchemaDecoder[First, Limit] =
       schema => Limit(schema.value).asRight[Throwable]
 
     implicit def optionSchemaDecoder[I, O](

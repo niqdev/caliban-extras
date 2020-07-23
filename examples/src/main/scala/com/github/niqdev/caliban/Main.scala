@@ -2,6 +2,7 @@ package com.github.niqdev.caliban
 
 import caliban.Http4sAdapter
 import caliban.interop.cats.implicits.CatsEffectGraphQL
+import caliban.pagination._
 import cats.effect.{ ConcurrentEffect, ContextShift, ExitCode, IO, IOApp, Resource, Timer }
 import com.github.niqdev.caliban.queries.Queries
 import com.github.niqdev.caliban.repositories.Repositories
@@ -33,7 +34,7 @@ object Main extends IOApp {
       xa           <- database.initInMemory[F]
       repositories <- Repositories.make[F](xa)
       services     <- Services.make[F](repositories)
-      api = Queries.api[F](services)
+      api = resolvers.Queries.api[F] |+| Queries.api[F](services)
       _           <- Resource.liftF(LogWriter.info(s"GraphQL Schema:\n${api.render}"))
       interpreter <- Resource.liftF(api.interpreterAsync)
       httpApp = Router(

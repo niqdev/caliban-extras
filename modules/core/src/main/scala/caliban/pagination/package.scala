@@ -27,7 +27,7 @@ package object pagination {
           .flatMap(base64String => Base64String.from(base64String).leftMap(new IllegalArgumentException(_)))
 
     /**
-      * Encodes from plain String with a prefix
+      * Encodes from plain String with prefix
       */
     def encodeWithPrefix(value: String, prefix: String): Either[Throwable, Base64String] =
       encode(s"$prefix$value")
