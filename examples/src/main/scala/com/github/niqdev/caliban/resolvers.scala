@@ -2,23 +2,23 @@ package com.github.niqdev.caliban
 
 import caliban.{ GraphQL, RootResolver }
 import cats.effect.Effect
-import com.github.niqdev.caliban.arguments.{ RepositoriesArg, RepositoryArg, UserArg }
+import com.github.niqdev.caliban.arguments._
 import com.github.niqdev.caliban.schema._
 import com.github.niqdev.caliban.services._
 
-object queries {
+object resolvers {
 
   /**
-    * Root Nodes
+    * GitHub roots
     */
-  final case class Queries[F[_]](
+  final case class GitHubQueries[F[_]](
     user: UserArg => F[Option[UserNode[F]]],
     repository: RepositoryArg => F[Option[RepositoryNode[F]]],
     repositories: RepositoriesArg => F[RepositoryConnection[F]]
   )
-  object Queries {
-    private[this] def resolver[F[_]: Effect](services: Services[F]): Queries[F] =
-      Queries(
+  object GitHubQueries {
+    private[this] def resolver[F[_]: Effect](services: Services[F]): GitHubQueries[F] =
+      GitHubQueries(
         user = userArg => services.userService.findByName(userArg.name),
         repository = repositoryArg => services.repositoryService.findByName(repositoryArg.name),
         repositories = services.repositoryService.connection(None)

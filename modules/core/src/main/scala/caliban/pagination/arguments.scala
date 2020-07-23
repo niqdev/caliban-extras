@@ -10,6 +10,7 @@ import eu.timepit.refined.types.numeric.NonNegInt
 object arguments extends ArgumentInstances {
 
   final case class NodeArg(id: NodeId)
+  final case class NodesArg(ids: List[NodeId])
 
   trait ForwardPaginationArg {
     def first: First

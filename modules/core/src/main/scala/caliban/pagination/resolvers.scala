@@ -5,19 +5,20 @@ import caliban.pagination.schemas._
 import caliban.{ GraphQL, RootResolver }
 import cats.effect.Effect
 
-// TODO nodes
 object resolvers {
 
   /**
-    * Query resolver
+    * Node roots
     */
-  final case class Queries[F[_]](
-    node: NodeArg => F[Option[Node[F]]]
+  final case class NodeQueries[F[_]](
+    node: NodeArg => F[Option[Node[F]]],
+    nodes: NodesArg => F[List[Node[F]]]
   )
-  object Queries {
-    private[this] def resolver[F[_]: Effect]: Queries[F] =
-      Queries(
-        node = _ => Effect[F].pure(None)
+  object NodeQueries {
+    private[this] def resolver[F[_]: Effect]: NodeQueries[F] =
+      NodeQueries(
+        node = _ => Effect[F].pure(None),
+        nodes = _ => Effect[F].pure(List.empty)
       )
 
     // TODO log errors: mapError or Wrapper
