@@ -11,6 +11,7 @@ import com.github.niqdev.caliban.repositories._
 import com.github.niqdev.caliban.schema._
 import eu.timepit.refined.types.numeric.PosLong
 
+// TODO use magnolia for typeclass derivation
 // TODO SchemaDecoderOps + move instances in sealed traits
 object codecs {
 
@@ -24,7 +25,7 @@ object codecs {
   object SchemaEncoder {
     def apply[A, B](implicit ev: SchemaEncoder[A, B]): SchemaEncoder[A, B] = ev
 
-    // TODO
+    // TODO option.get ???
     implicit lazy val cursorSchemaEncoder: SchemaEncoder[RowNumber, Cursor] =
       rowNumber =>
         Base64String

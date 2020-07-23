@@ -58,6 +58,5 @@ package object pagination {
       */
     def decodeWithoutPrefix(base64String: Base64String, prefix: String): Either[Throwable, String] =
       decode(base64String).flatMap(value => removePrefix(value, prefix))
-
   }
 }

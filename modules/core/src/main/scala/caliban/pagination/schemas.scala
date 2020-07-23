@@ -8,6 +8,7 @@ import cats.effect.Effect
 import eu.timepit.refined.types.numeric.{ NonNegInt, NonNegLong }
 import io.estatico.newtype.macros.newtype
 
+// TODO refined schema
 object schemas extends SchemaInstances {
 
   @newtype case class NodeId(value: Base64String)

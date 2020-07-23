@@ -5,6 +5,7 @@ import caliban.pagination.schemas._
 import caliban.{ GraphQL, RootResolver }
 import cats.effect.Effect
 
+// TODO nodes
 object resolvers {
 
   /**
