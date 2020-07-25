@@ -55,7 +55,7 @@ object schemas {
     createdAt: Instant,
     updatedAt: Instant,
     //repository: Repository,
-    repositories: RepositoriesArg => F[RepositoryConnection[F]]
+    repositories: RepositoriesArg => F[Connection[F, RepositoryNode[F]]]
   ) extends Node[F]
   object UserNode {
     final val idPrefix = "user:v1:"
@@ -74,18 +74,4 @@ object schemas {
   object RepositoryNode {
     val idPrefix = "repository:v1:"
   }
-
-  // TODO delete
-  final case class RepositoryConnection[F[_]](
-    edges: List[RepositoryEdge[F]],
-    nodes: List[RepositoryNode[F]],
-    pageInfo: PageInfo,
-    totalCount: NonNegLong
-  )
-
-  // TODO delete
-  final case class RepositoryEdge[F[_]](
-    cursor: Cursor,
-    node: RepositoryNode[F]
-  )
 }

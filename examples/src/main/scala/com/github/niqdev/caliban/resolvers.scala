@@ -37,7 +37,7 @@ object resolvers {
   final case class GitHubQueries[F[_]](
     user: UserArg => F[Option[UserNode[F]]],
     repository: RepositoryArg => F[Option[RepositoryNode[F]]],
-    repositories: RepositoriesArg => F[RepositoryConnection[F]]
+    repositories: RepositoriesArg => F[Connection[F, RepositoryNode[F]]]
   )
   object GitHubQueries {
     private[this] def resolver[F[_]: Effect](services: Services[F]): GitHubQueries[F] =

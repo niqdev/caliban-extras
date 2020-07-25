@@ -63,8 +63,8 @@ object services {
     protected[caliban] val toNode: Repository => RepositoryNode[F] =
       _.encodeFrom[RepositoryNode[F]]
 
-    protected[caliban] val toEdge: Repository => RowNumber => RepositoryEdge[F] =
-      repository => rowNumber => (repository -> rowNumber).encodeFrom[RepositoryEdge[F]]
+    protected[caliban] val toEdge: Repository => RowNumber => Edge[F, RepositoryNode[F]] =
+      repository => rowNumber => (repository -> rowNumber).encodeFrom[Edge[F, RepositoryNode[F]]]
 
     def findNode(id: NodeId): F[Option[RepositoryNode[F]]] =
       F.fromEither(SchemaDecoder[NodeId, RepositoryId].to(id))
@@ -77,7 +77,7 @@ object services {
       repositoryRepo.findByName(name).nested.map(toNode).value
 
     // TODO
-    def connection(maybeUserId: Option[UserId]): RepositoriesArg => F[RepositoryConnection[F]] =
+    def connection(maybeUserId: Option[UserId]): RepositoriesArg => F[Connection[F, RepositoryNode[F]]] =
       paginationArg =>
         for {
           limit <- F.fromEither(SchemaDecoder[First, Limit].to(paginationArg.first))
@@ -98,7 +98,7 @@ object services {
             )
           }
           totalCount <- repositoryRepo.count
-        } yield RepositoryConnection(edges, nodes, pageInfo, totalCount)
+        } yield Connection(edges, nodes, pageInfo, totalCount)
 
   }
   object RepositoryService {

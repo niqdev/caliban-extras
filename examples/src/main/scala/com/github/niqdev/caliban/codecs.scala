@@ -44,7 +44,7 @@ object codecs {
 
     implicit def userNodeSchemaEncoder[F[_]](
       implicit uniSchemaEncoder: SchemaEncoder[UserId, NodeId]
-    ): SchemaEncoder[(User, RepositoriesArg => F[RepositoryConnection[F]]), UserNode[F]] = {
+    ): SchemaEncoder[(User, RepositoriesArg => F[Connection[F, RepositoryNode[F]]]), UserNode[F]] = {
       case (user, getRepositoryConnectionF) =>
         UserNode(
           id = uniSchemaEncoder.from(user.id),
@@ -80,9 +80,9 @@ object codecs {
       implicit cSchemaEncoder: SchemaEncoder[RowNumber, Cursor],
       //rniSchemaEncoder: SchemaEncoder[RepositoryId, NodeId],
       rnSchemaEncoder: SchemaEncoder[Repository, RepositoryNode[F]]
-    ): SchemaEncoder[(Repository, RowNumber), RepositoryEdge[F]] = {
+    ): SchemaEncoder[(Repository, RowNumber), Edge[F, RepositoryNode[F]]] = {
       case (model, rowNumber) =>
-        RepositoryEdge(
+        Edge(
           cursor = cSchemaEncoder.from(rowNumber),
           node = rnSchemaEncoder.from(model)
         )
