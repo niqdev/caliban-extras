@@ -1,10 +1,7 @@
 package caliban.pagination
 
-import caliban.CalibanError
-import caliban.Value.{ IntValue, StringValue }
 import caliban.pagination.schemas.{ Cursor, First, Last, NodeId }
 import caliban.schema.ArgBuilder
-import cats.syntax.either._
 import eu.timepit.refined.types.numeric.NonNegInt
 
 object arguments extends PaginationArgumentInstances {
@@ -28,29 +25,23 @@ object arguments extends PaginationArgumentInstances {
 
 protected[pagination] sealed trait PaginationArgumentInstances {
 
-  implicit val base64StringArgBuilder: ArgBuilder[Base64String] = {
-    case StringValue(value) =>
-      Base64String.from(value).leftMap(CalibanError.ExecutionError(_))
-    case other =>
-      Left(CalibanError.ExecutionError(s"Can't build a Base64String from input $other"))
-  }
+  implicit def nodeIdArgBuilder(
+    implicit ab: ArgBuilder[Base64String]
+  ): ArgBuilder[NodeId] =
+    ab.map(NodeId.apply)
 
-  implicit val nodeIdArgBuilder: ArgBuilder[NodeId] =
-    base64StringArgBuilder.map(NodeId.apply)
+  implicit def cursorArgBuilder(
+    implicit ab: ArgBuilder[Base64String]
+  ): ArgBuilder[Cursor] =
+    ab.map(Cursor.apply)
 
-  implicit val cursorArgBuilder: ArgBuilder[Cursor] =
-    base64StringArgBuilder.map(Cursor.apply)
+  implicit def firstArgBuilder(
+    implicit ab: ArgBuilder[NonNegInt]
+  ): ArgBuilder[First] =
+    ab.map(First.apply)
 
-  implicit val nonNegIntArgBuilder: ArgBuilder[NonNegInt] = {
-    case value: IntValue =>
-      NonNegInt.from(value.toInt).leftMap(CalibanError.ExecutionError(_))
-    case other =>
-      Left(CalibanError.ExecutionError(s"Can't build a NonNegInt from input $other"))
-  }
-
-  implicit val firstArgBuilder: ArgBuilder[First] =
-    nonNegIntArgBuilder.map(First.apply)
-
-  implicit val lastArgBuilder: ArgBuilder[Last] =
-    nonNegIntArgBuilder.map(Last.apply)
+  implicit def lastArgBuilder(
+    implicit ab: ArgBuilder[NonNegInt]
+  ): ArgBuilder[Last] =
+    ab.map(Last.apply)
 }
