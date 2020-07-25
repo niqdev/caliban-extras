@@ -1,33 +1,42 @@
 lazy val V = new {
-  val scalaVersion = "2.13.3"
-
+  val caliban    = "0.9.0"
   val catsCore   = "2.1.1"
   val catsEffect = "2.1.4"
-  val http4s     = "0.21.6"
   val doobie     = "0.9.0"
   val flyway     = "6.5.2"
-  val caliban    = "0.9.0"
+  val http4s     = "0.21.6"
   val newtype    = "0.4.4"
-  val refined    = "0.9.15"
   val logEffect  = "0.13.1"
   val logback    = "1.2.3"
+  val refined    = "0.9.15"
 
   // test
-  val scalatest  = "3.2.0"
   val scalacheck = "1.14.3"
+  val scalatest  = "3.2.0"
 }
 
 lazy val commonSettings = Seq(
   organization := "com.github.niqdev",
-  scalaVersion := V.scalaVersion,
-  crossScalaVersions := Seq("2.12.12", V.scalaVersion),
+  scalaVersion := "2.13.3",
   scalacOptions ++= Seq(
     "-Ymacro-annotations"
   )
 )
 
+lazy val refined = project
+  .in(file("modules/refined"))
+  .settings(commonSettings)
+  .settings(
+    name := "caliban-extras-refined",
+    libraryDependencies ++= Seq(
+      "com.github.ghostdogpr" %% "caliban" % V.caliban,
+      "eu.timepit"            %% "refined" % V.refined
+    )
+  )
+
 lazy val core = project
   .in(file("modules/core"))
+  .dependsOn(refined)
   .settings(commonSettings)
   .settings(
     name := "caliban-extras-core",
@@ -37,7 +46,6 @@ lazy val core = project
       "com.github.ghostdogpr" %% "caliban"      % V.caliban,
       "com.github.ghostdogpr" %% "caliban-cats" % V.caliban,
       "io.estatico"           %% "newtype"      % V.newtype,
-      "eu.timepit"            %% "refined"      % V.refined,
       "org.scalatest"         %% "scalatest"    % V.scalatest  % Test,
       "org.scalacheck"        %% "scalacheck"   % V.scalacheck % Test
     )
@@ -73,7 +81,7 @@ lazy val examples = project
 
 lazy val root = project
   .in(file("."))
-  .aggregate(core, doobie, examples)
+  .aggregate(core, doobie, refined, examples)
   .settings(
     name := "caliban-extras",
     addCommandAlias("checkFormat", ";scalafmtCheckAll;scalafmtSbtCheck"),

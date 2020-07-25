@@ -4,7 +4,7 @@ import caliban.interop.cats.CatsInterop
 import caliban.pagination.schemas._
 import caliban.schema.Schema
 import cats.effect.Effect
-import eu.timepit.refined.types.numeric.{ NonNegInt, NonNegLong }
+import eu.timepit.refined.types.numeric.NonNegInt
 import io.estatico.newtype.macros.newtype
 
 object schemas extends PaginationSchemaInstances {
@@ -35,21 +35,15 @@ protected[pagination] sealed trait PaginationSchemaInstances {
   implicit def effectSchema[F[_]: Effect, R, A](implicit ev: Schema[R, A]): Schema[R, F[A]] =
     CatsInterop.schema
 
-  implicit val base64StringSchema: Schema[Any, Base64String] =
-    Schema.stringSchema.contramap(_.value)
+  implicit def nodeIdSchema(implicit s: Schema[Any, Base64String]): Schema[Any, NodeId] =
+    s.contramap(_.value)
 
-  implicit val nodeIdSchema: Schema[Any, NodeId] =
-    base64StringSchema.contramap(_.value)
+  implicit def cursorSchema(implicit s: Schema[Any, Base64String]): Schema[Any, Cursor] =
+    s.contramap(_.value)
 
-  implicit val cursorSchema: Schema[Any, Cursor] =
-    base64StringSchema.contramap(_.value)
+  implicit def firstSchema(implicit s: Schema[Any, NonNegInt]): Schema[Any, First] =
+    s.contramap(_.value)
 
-  implicit val firstSchema: Schema[Any, First] =
-    Schema.intSchema.contramap(_.value.value)
-
-  implicit val lastSchema: Schema[Any, Last] =
-    Schema.intSchema.contramap(_.value.value)
-
-  implicit val nonNegLongSchema: Schema[Any, NonNegLong] =
-    Schema.longSchema.contramap(_.value)
+  implicit def lastSchema(implicit s: Schema[Any, NonNegInt]): Schema[Any, Last] =
+    s.contramap(_.value)
 }

@@ -96,9 +96,4 @@ sealed trait SchemaInstances {
   implicit val instantSchema: Schema[Any, Instant] =
     Schema.longSchema.contramap(_.getEpochSecond)
 
-  implicit val nonEmptyStringSchema: Schema[Any, NonEmptyString] =
-    Schema.stringSchema.contramap(_.value)
-
-  implicit val urlSchema: Schema[Any, Url] =
-    Schema.stringSchema.contramap(_.toString)
 }

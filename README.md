@@ -28,13 +28,13 @@ query findRepositoryByName {
 query getNodeById {
   node(id: "opaqueCursor") {
     id
-    ... on UserNodeF {
+    ... on User {
       id
       name
       createdAt
       updatedAt
     }
-    ... on RepositoryNodeF {
+    ... on Repository {
       name
       url
       isFork
