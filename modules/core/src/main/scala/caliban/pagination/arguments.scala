@@ -7,7 +7,7 @@ import caliban.schema.ArgBuilder
 import cats.syntax.either._
 import eu.timepit.refined.types.numeric.NonNegInt
 
-object arguments extends ArgumentInstances {
+object arguments extends PaginationArgumentInstances {
 
   final case class NodeArg(id: NodeId)
   final case class NodesArg(ids: List[NodeId])
@@ -26,7 +26,7 @@ object arguments extends ArgumentInstances {
 
 }
 
-protected[pagination] sealed trait ArgumentInstances {
+protected[pagination] sealed trait PaginationArgumentInstances {
 
   implicit val base64StringArgBuilder: ArgBuilder[Base64String] = {
     case StringValue(value) =>

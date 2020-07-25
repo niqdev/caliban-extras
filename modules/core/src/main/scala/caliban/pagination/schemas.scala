@@ -1,64 +1,35 @@
 package caliban.pagination
 
 import caliban.interop.cats.CatsInterop
-import caliban.pagination.schemas.{ Cursor, First, Last, NodeId }
-import caliban.schema.Annotations.GQLInterface
+import caliban.pagination.schemas._
 import caliban.schema.Schema
 import cats.effect.Effect
 import eu.timepit.refined.types.numeric.{ NonNegInt, NonNegLong }
 import io.estatico.newtype.macros.newtype
 
-// TODO refined schema
-object schemas extends SchemaInstances {
+object schemas extends PaginationSchemaInstances {
 
   @newtype case class NodeId(value: Base64String)
   @newtype case class Cursor(value: Base64String)
   @newtype case class First(value: NonNegInt)
   @newtype case class Last(value: NonNegInt)
 
-  // TODO trait WithPrefix or Node.prefix?
   // TODO every Node must have a prefix
   object Cursor {
     final val prefix = "cursor:v1:"
   }
 
+  // TODO not supported by caliban: to be able to expose it as Root node, it must be a sealed trait and higher-kinded
+  /*
   @GQLInterface
-  trait Node[F[_]] {
+  trait Node {
     def id: NodeId
   }
-
-  final case class Edge[F[_], T <: Node[F]](
-    cursor: Cursor,
-    node: T
-  )
-
-  /*
-   * If the client is paginating with first/after (Forward Pagination):
-   * - hasNextPage is true if further edges exist, otherwise false
-   * - hasPreviousPage may be true if edges prior to after exist, if it can do so efficiently, otherwise may return false
-   *
-   * If the client is paginating with last/before (Backward Pagination):
-   * - hasNextPage may be true if edges further from before exist, if it can do so efficiently, otherwise may return false
-   * - hasPreviousPage is true if prior edges exist, otherwise false
-   *
-   * startCursor and endCursor must be the cursors corresponding to the first and last nodes in edges, respectively
    */
-  final case class PageInfo(
-    hasNextPage: Boolean,
-    hasPreviousPage: Boolean,
-    startCursor: Cursor,
-    endCursor: Cursor
-  )
-
-  final case class Connection[F[_], T <: Node[F]](
-    edges: List[Edge[F, T]],
-    nodes: List[T],
-    pageInfo: PageInfo,
-    totalCount: NonNegLong
-  )
 }
 
-protected[pagination] sealed trait SchemaInstances {
+// TODO add generic refined schema/argument derivation
+protected[pagination] sealed trait PaginationSchemaInstances {
 
   // see caliban.interop.cats.implicits.effectSchema
   implicit def effectSchema[F[_]: Effect, R, A](implicit ev: Schema[R, A]): Schema[R, F[A]] =

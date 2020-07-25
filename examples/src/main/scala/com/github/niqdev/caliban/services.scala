@@ -9,6 +9,7 @@ import cats.syntax.flatMap._
 import cats.syntax.foldable._
 import cats.syntax.functor._
 import cats.syntax.nested._
+import cats.syntax.traverse._
 import com.github.niqdev.caliban.arguments.RepositoriesArg
 import com.github.niqdev.caliban.codecs._
 import com.github.niqdev.caliban.models._
@@ -108,9 +109,11 @@ object services {
   /**
     * Node service
     */
-  abstract class NodeService[F[_]: Sync](
+  sealed abstract class NodeService[F[_]](
     userService: UserService[F],
     repositoryService: RepositoryService[F]
+  )(
+    implicit F: Sync[F]
   ) {
 
     // TODO create specific error + log WARN
@@ -124,6 +127,8 @@ object services {
         repositoryNode <- repositoryService.findNode(id).recover(recoverInvalidNode[RepositoryNode[F]])
       } yield List(userNode, repositoryNode).collectFirstSomeM(List(_)).head
 
+    def findNodes(ids: List[NodeId]): F[List[Option[Node[F]]]] =
+      F.pure(ids).flatMap(_.traverse(id => findNode(id)))
   }
   object NodeService {
     def apply[F[_]: Sync](repositories: Repositories[F]): NodeService[F] = {
