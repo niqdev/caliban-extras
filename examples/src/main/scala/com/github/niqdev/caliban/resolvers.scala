@@ -9,7 +9,6 @@ import com.github.niqdev.caliban.services._
 object resolvers {
   import caliban.interop.cats.implicits._
   import caliban.pagination.arguments._
-  import caliban.pagination.arguments.implicits._
   import caliban.refined._
 
   /**

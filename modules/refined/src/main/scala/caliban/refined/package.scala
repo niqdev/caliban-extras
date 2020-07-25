@@ -61,11 +61,15 @@ package object refined {
         }
     }
 
-  // FIXME
-//  implicit def coercibleRefinedArgBuilder[A, B, P, F[_, _]](
-//    implicit argBuilder: ArgBuilder[F[B, P]],
-//    coercible: Coercible[F[B, P], A]
-//  ): ArgBuilder[A] =
-//    argBuilder.map(coercible.apply)
+  /*
+   * Given an ArgBuilder instance for a phantom type F[R, P]
+   * that contains a value of type R and refined type P,
+   * derive an ArgBuilder instance for newtype N
+   */
+  implicit def coercibleRefinedArgBuilder[R, N, P, F[_, _]](
+    implicit ev: Coercible[ArgBuilder[F[R, P]], ArgBuilder[N]],
+    argBuilder: ArgBuilder[F[R, P]]
+  ): ArgBuilder[N] =
+    ev(argBuilder)
 
 }
