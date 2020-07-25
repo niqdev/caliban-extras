@@ -5,7 +5,9 @@ import caliban.schema.ArgBuilder
 import eu.timepit.refined.types.numeric.NonNegInt
 import io.estatico.newtype.Coercible
 
-object arguments extends PaginationArgumentInstances {
+object arguments {
+
+  object implicits extends PaginationArgumentInstances
 
   final case class NodeArg(id: NodeId)
   final case class NodesArg(ids: List[NodeId])
@@ -21,7 +23,6 @@ object arguments extends PaginationArgumentInstances {
     // "before" is the cursor of the first edge in the next page
     def before: Option[Cursor]
   }
-
 }
 
 protected[pagination] sealed trait PaginationArgumentInstances {

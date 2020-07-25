@@ -3,6 +3,7 @@ package caliban
 import caliban.Value._
 import caliban.schema.{ ArgBuilder, Schema }
 import eu.timepit.refined.api.{ RefType, Validate }
+import io.estatico.newtype.Coercible
 
 package object refined {
 
@@ -12,17 +13,18 @@ package object refined {
   ): Schema[Any, F[T, P]] =
     underlying.contramap(refType.unwrap)
 
-  // FIXME
-  // diverging implicit expansion for type caliban.schema.Schema[Any,F[B,P]]
-  // starting with method streamSchema in trait GenericSchema
   /*
-  implicit def coercibleRefinedSchema[A, B, P, F[_, _]](
-    implicit schema: Schema[Any, F[B, P]],
-    coercible: Coercible[A, F[B, P]]
-  ): Schema[Any, A] =
-    schema.contramap(coercible.apply)
+   * Given a Schema instance for a phantom type F[R, P]
+   * that contains a value of type R and refined type P,
+   * derive a Schema instance for newtype N
    */
+  implicit def coercibleRefinedSchema[R, N, P, F[_, _]](
+    implicit ev: Coercible[Schema[Any, F[R, P]], Schema[Any, N]],
+    schema: Schema[Any, F[R, P]]
+  ): Schema[Any, N] =
+    ev(schema)
 
+  // see io.circe.refined and caliban.ValueCirce
   implicit def refinedArgBuilder[T, P, F[_, _]](
     implicit validate: Validate[T, P],
     refType: RefType[F]
