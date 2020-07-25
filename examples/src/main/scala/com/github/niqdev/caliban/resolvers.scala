@@ -6,7 +6,7 @@ import caliban.refined._
 import caliban.{ GraphQL, RootResolver }
 import cats.effect.Effect
 import com.github.niqdev.caliban.arguments._
-import com.github.niqdev.caliban.schema._
+import com.github.niqdev.caliban.schemas._
 import com.github.niqdev.caliban.services._
 
 object resolvers {

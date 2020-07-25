@@ -4,14 +4,13 @@ import java.time.Instant
 
 import caliban.pagination.schemas._
 import caliban.schema.Annotations.{ GQLInterface, GQLName }
-import caliban.schema.Schema
 import com.github.niqdev.caliban.arguments.RepositoriesArg
 import eu.timepit.refined.api.Refined
 import eu.timepit.refined.string.Url
 import eu.timepit.refined.types.numeric.NonNegLong
 import eu.timepit.refined.types.string.NonEmptyString
 
-object schema extends SchemaInstances {
+object schemas {
 
   // TODO see caliban.pagination.schemas.Node
   @GQLInterface
@@ -89,11 +88,4 @@ object schema extends SchemaInstances {
     cursor: Cursor,
     node: RepositoryNode[F]
   )
-}
-
-sealed trait SchemaInstances {
-
-  implicit val instantSchema: Schema[Any, Instant] =
-    Schema.longSchema.contramap(_.getEpochSecond)
-
 }

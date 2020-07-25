@@ -8,7 +8,7 @@ import cats.syntax.either._
 import com.github.niqdev.caliban.arguments.RepositoriesArg
 import com.github.niqdev.caliban.models._
 import com.github.niqdev.caliban.repositories._
-import com.github.niqdev.caliban.schema._
+import com.github.niqdev.caliban.schemas._
 import eu.timepit.refined.types.numeric.PosLong
 
 // TODO use magnolia for typeclass derivation
