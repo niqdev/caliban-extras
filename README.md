@@ -44,6 +44,37 @@ query getNodeById {
   }
 }
 
+query getNodesByIds {
+  nodes(ids: [
+    "opaqueCursor",
+    "opaqueCursor"
+  ]) {
+    id
+    ... on User {
+      id
+      name
+      createdAt
+      updatedAt
+    }
+    ... on Repository {
+      name
+      url
+      isFork
+      createdAt
+      updatedAt
+    }
+  }
+}
+
+query getRepositories {
+  repositories(first: 2, after: "opaqueCursor") {
+    nodes {
+      id
+      name
+    }
+  }
+}
+
 query getSimpleUser {
   user(name: "typelevel") {
     id
@@ -59,15 +90,6 @@ query getSimpleUser {
       pageInfo {
         hasNextPage
       }
-    }
-  }
-}
-
-query getRepositories {
-  repositories(first: 2, after: "opaqueCursor") {
-    nodes {
-      id
-      name
     }
   }
 }
