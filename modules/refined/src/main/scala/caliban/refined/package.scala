@@ -12,6 +12,17 @@ package object refined {
   ): Schema[Any, F[T, P]] =
     underlying.contramap(refType.unwrap)
 
+  // FIXME
+  // diverging implicit expansion for type caliban.schema.Schema[Any,F[B,P]]
+  // starting with method streamSchema in trait GenericSchema
+  /*
+  implicit def coercibleRefinedSchema[A, B, P, F[_, _]](
+    implicit schema: Schema[Any, F[B, P]],
+    coercible: Coercible[A, F[B, P]]
+  ): Schema[Any, A] =
+    schema.contramap(coercible.apply)
+   */
+
   implicit def refinedArgBuilder[T, P, F[_, _]](
     implicit validate: Validate[T, P],
     refType: RefType[F]
@@ -47,4 +58,12 @@ package object refined {
             Left(CalibanError.ExecutionError(s"Can't build a Refined from input $other"))
         }
     }
+
+  // FIXME
+//  implicit def coercibleRefinedArgBuilder[A, B, P, F[_, _]](
+//    implicit argBuilder: ArgBuilder[F[B, P]],
+//    coercible: Coercible[F[B, P], A]
+//  ): ArgBuilder[A] =
+//    argBuilder.map(coercible.apply)
+
 }

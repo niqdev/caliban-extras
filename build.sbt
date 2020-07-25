@@ -30,7 +30,8 @@ lazy val refined = project
     name := "caliban-extras-refined",
     libraryDependencies ++= Seq(
       "com.github.ghostdogpr" %% "caliban" % V.caliban,
-      "eu.timepit"            %% "refined" % V.refined
+      "eu.timepit"            %% "refined" % V.refined,
+      "io.estatico"           %% "newtype" % V.newtype
     )
   )
 
@@ -45,7 +46,6 @@ lazy val core = project
       "org.typelevel"         %% "cats-effect"  % V.catsEffect,
       "com.github.ghostdogpr" %% "caliban"      % V.caliban,
       "com.github.ghostdogpr" %% "caliban-cats" % V.caliban,
-      "io.estatico"           %% "newtype"      % V.newtype,
       "org.scalatest"         %% "scalatest"    % V.scalatest  % Test,
       "org.scalacheck"        %% "scalacheck"   % V.scalacheck % Test
     )

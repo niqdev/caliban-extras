@@ -3,6 +3,7 @@ package caliban.pagination
 import caliban.pagination.schemas.{ Cursor, First, Last, NodeId }
 import caliban.schema.ArgBuilder
 import eu.timepit.refined.types.numeric.NonNegInt
+import io.estatico.newtype.Coercible
 
 object arguments extends PaginationArgumentInstances {
 
@@ -25,23 +26,15 @@ object arguments extends PaginationArgumentInstances {
 
 protected[pagination] sealed trait PaginationArgumentInstances {
 
-  implicit def nodeIdArgBuilder(
-    implicit ab: ArgBuilder[Base64String]
-  ): ArgBuilder[NodeId] =
-    ab.map(NodeId.apply)
+  implicit def base64StringArgBuilder[T](
+    implicit ab: ArgBuilder[Base64String],
+    coercible: Coercible[Base64String, T]
+  ): ArgBuilder[T] =
+    ab.map(coercible.apply)
 
-  implicit def cursorArgBuilder(
-    implicit ab: ArgBuilder[Base64String]
-  ): ArgBuilder[Cursor] =
-    ab.map(Cursor.apply)
-
-  implicit def firstArgBuilder(
-    implicit ab: ArgBuilder[NonNegInt]
-  ): ArgBuilder[First] =
-    ab.map(First.apply)
-
-  implicit def lastArgBuilder(
-    implicit ab: ArgBuilder[NonNegInt]
-  ): ArgBuilder[Last] =
-    ab.map(Last.apply)
+  implicit def nonNegIntArgBuilder[T](
+    implicit ab: ArgBuilder[NonNegInt],
+    coercible: Coercible[NonNegInt, T]
+  ): ArgBuilder[T] =
+    ab.map(coercible.apply)
 }
