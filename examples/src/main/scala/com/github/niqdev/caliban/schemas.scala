@@ -4,16 +4,17 @@ import java.time.Instant
 
 import caliban.pagination.schemas._
 import caliban.schema.Annotations.{ GQLInterface, GQLName }
-import com.github.niqdev.caliban.arguments.RepositoriesArg
+import com.github.niqdev.caliban.arguments._
 import eu.timepit.refined.api.Refined
 import eu.timepit.refined.string.Url
-import eu.timepit.refined.types.numeric.NonNegLong
+import eu.timepit.refined.types.numeric.{ NonNegLong, PosInt }
 import eu.timepit.refined.types.string.NonEmptyString
 
 object schemas {
 
   // TODO see caliban.pagination.schemas.Node
   @GQLInterface
+  @GQLName("Node")
   sealed trait Node[F[_]] {
     def id: NodeId
   }
@@ -54,14 +55,13 @@ object schemas {
     name: NonEmptyString,
     createdAt: Instant,
     updatedAt: Instant,
-    //repository: Repository,
+    //repository: RepositoryArg => F[RepositoryNode[F]]
     repositories: RepositoriesArg => F[Connection[F, RepositoryNode[F]]]
   ) extends Node[F]
   object UserNode {
     final val idPrefix = "user:v1:"
   }
 
-  // TODO add issue|issues
   @GQLName("Repository")
   final case class RepositoryNode[F[_]](
     id: NodeId,
@@ -70,8 +70,31 @@ object schemas {
     isFork: Boolean,
     createdAt: Instant,
     updatedAt: Instant
+    //issue: IssueArg => F[IssueNode[F]]
+    //issues: IssuesArg => F[Connection[F, IssueNode[F]]]
   ) extends Node[F]
   object RepositoryNode {
     val idPrefix = "repository:v1:"
+  }
+
+  // TODO add example of enumeratum
+  sealed trait IssueStatus
+  object IssueStatus {
+    final case object OPEN  extends IssueStatus
+    final case object CLOSE extends IssueStatus
+  }
+
+  @GQLName("Issue")
+  final case class IssueNode[F[_]](
+    id: NodeId,
+    number: PosInt,
+    state: IssueStatus,
+    title: NonEmptyString,
+    body: NonEmptyString,
+    createdAt: Instant,
+    updatedAt: Instant
+  ) extends Node[F]
+  object IssueNode {
+    val idPrefix = "issue:v1:"
   }
 }
