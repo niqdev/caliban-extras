@@ -4,7 +4,7 @@
 
 ## Example
 
-Re-inventing GraphQL [GitHub](https://developer.github.com/v4/explorer) api pagination, filter and authentication
+A simplified version of GraphQL [GitHub](https://developer.github.com/v4/explorer) api with pagination, filters and authentication
 
 ```bash
 # run example
@@ -153,6 +153,8 @@ query getUser {
     - [GraphQL Server Specification](https://relay.dev/docs/en/graphql-server-specification)
     - [GraphQL Pagination best practices](https://medium.com/javascript-in-plain-english/graphql-pagination-using-edges-vs-nodes-in-connections-f2ddb8edffa0)
     - [Evolving API Pagination at Slack](https://slack.engineering/evolving-api-pagination-at-slack-1c1f644f8e12)
+* Filter
+    - Drupal [Filters](https://drupal-graphql.gitbook.io/graphql/queries/filters)
 * Caliban
     - [Caliban](https://ghostdogpr.github.io/caliban) (Documentation)
     - [Caliban: Designing a Functional GraphQL Library](https://www.youtube.com/watch?v=OC8PbviYUlQ) by Pierre Ricadat (Video)
