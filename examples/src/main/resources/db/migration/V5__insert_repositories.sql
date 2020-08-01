@@ -1,6 +1,6 @@
 -- typelevel
-INSERT INTO example.repository (user_id, name, url, is_fork) VALUES ('e1fba794-54f5-4231-a448-f464aac512e5', 'cats', 'https://github.com/typelevel/cats', FALSE);
-INSERT INTO example.repository (user_id, name, url, is_fork) VALUES ('e1fba794-54f5-4231-a448-f464aac512e5', 'cats-effect', 'https://github.com/typelevel/cats-effect', FALSE);
+INSERT INTO example.repository (id, user_id, name, url, is_fork) VALUES ('a63537cc-d401-49c9-98a5-615ed4bae49b', 'e1fba794-54f5-4231-a448-f464aac512e5', 'cats', 'https://github.com/typelevel/cats', FALSE);
+INSERT INTO example.repository (id, user_id, name, url, is_fork) VALUES ('2950bfdc-d6e7-4505-95cf-3283835ad830', 'e1fba794-54f5-4231-a448-f464aac512e5', 'cats-effect', 'https://github.com/typelevel/cats-effect', FALSE);
 INSERT INTO example.repository (user_id, name, url, is_fork) VALUES ('e1fba794-54f5-4231-a448-f464aac512e5', 'cats-mtl', 'https://github.com/typelevel/cats-mtl', FALSE);
 INSERT INTO example.repository (user_id, name, url, is_fork) VALUES ('e1fba794-54f5-4231-a448-f464aac512e5', 'scalacheck', 'https://github.com/typelevel/scalacheck', FALSE);
 INSERT INTO example.repository (user_id, name, url, is_fork) VALUES ('e1fba794-54f5-4231-a448-f464aac512e5', 'kind-projector', 'https://github.com/typelevel/kind-projector', FALSE);
@@ -22,8 +22,8 @@ INSERT INTO example.repository (user_id, name, url, is_fork) VALUES ('e1fba794-5
 INSERT INTO example.repository (user_id, name, url, is_fork) VALUES ('e1fba794-54f5-4231-a448-f464aac512e5', 'scala', 'https://github.com/typelevel/scala', TRUE);
 
 -- zio
-INSERT INTO example.repository (user_id, name, url, is_fork) VALUES ('f0fbe131-3f65-4145-b373-5bbfc1c9a1ae', 'zio', 'https://github.com/zio/zio', FALSE);
-INSERT INTO example.repository (user_id, name, url, is_fork) VALUES ('f0fbe131-3f65-4145-b373-5bbfc1c9a1ae', 'zio-config', 'https://github.com/zio/zio-config', FALSE);
+INSERT INTO example.repository (id, user_id, name, url, is_fork) VALUES ('c57d23ae-49b1-4400-b448-dee2305d5671', 'f0fbe131-3f65-4145-b373-5bbfc1c9a1ae', 'zio', 'https://github.com/zio/zio', FALSE);
+INSERT INTO example.repository (id, user_id, name, url, is_fork) VALUES ('5b22ae67-6005-4644-8ab3-b9b0b2f30824', 'f0fbe131-3f65-4145-b373-5bbfc1c9a1ae', 'zio-config', 'https://github.com/zio/zio-config', FALSE);
 INSERT INTO example.repository (user_id, name, url, is_fork) VALUES ('f0fbe131-3f65-4145-b373-5bbfc1c9a1ae', 'zio-keeper', 'https://github.com/zio/zio-keeper', FALSE);
 INSERT INTO example.repository (user_id, name, url, is_fork) VALUES ('f0fbe131-3f65-4145-b373-5bbfc1c9a1ae', 'zio-nio', 'https://github.com/zio/zio-nio', FALSE);
 INSERT INTO example.repository (user_id, name, url, is_fork) VALUES ('f0fbe131-3f65-4145-b373-5bbfc1c9a1ae', 'zio-redis', 'https://github.com/zio/zio-redis', FALSE);

@@ -108,7 +108,7 @@ object schemas {
   final case class IssueNode[F[_]](
     id: NodeId,
     number: PosInt,
-    state: IssueStatus,
+    status: IssueStatus,
     title: NonEmptyString,
     body: NonEmptyString,
     createdAt: Instant,

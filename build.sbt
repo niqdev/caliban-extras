@@ -3,6 +3,7 @@ lazy val V = new {
   val catsCore   = "2.1.1"
   val catsEffect = "2.1.4"
   val doobie     = "0.9.0"
+  val enumeratum = "1.6.1"
   val flyway     = "6.5.2"
   val http4s     = "0.21.6"
   val newtype    = "0.4.4"
@@ -74,6 +75,9 @@ lazy val examples = project
       "org.http4s"            %% "http4s-dsl"          % V.http4s,
       "org.http4s"            %% "http4s-blaze-server" % V.http4s,
       "com.github.ghostdogpr" %% "caliban-http4s"      % V.caliban,
+      "com.beachape"          %% "enumeratum"          % V.enumeratum,
+      "com.beachape"          %% "enumeratum-circe"    % V.enumeratum,
+      "com.beachape"          %% "enumeratum-doobie"   % "1.6.0",
       "io.laserdisc"          %% "log-effect-fs2"      % V.logEffect,
       "ch.qos.logback"         % "logback-classic"     % V.logback    % Runtime,
       "org.scalatest"         %% "scalatest"           % V.scalatest  % Test,

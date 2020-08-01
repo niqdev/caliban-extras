@@ -40,6 +40,7 @@ object database {
     } yield xa
 
   // http://h2database.com/html/main.html
+  // TODO console http://www.h2database.com/html/tutorial.html#using_server
   def initH2[F[_]: Async: ContextShift](implicit log: LogWriter[F]): Resource[F, H2Transactor[F]] = {
     val config = Config("jdbc:h2:mem:example_db;DB_CLOSE_DELAY=-1", "sa", "", "example")
 

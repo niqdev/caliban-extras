@@ -12,4 +12,4 @@ CREATE TABLE IF NOT EXISTS example.repository (
 CREATE INDEX IF NOT EXISTS repository_user_id_idx ON example.repository (user_id);
 CREATE INDEX IF NOT EXISTS repository_name_idx ON example.repository (name);
 
-ALTER TABLE example.repository ADD FOREIGN KEY (user_id) REFERENCES example.user (id);
+ALTER TABLE example.repository ADD FOREIGN KEY (user_id) REFERENCES example.user (id) ON DELETE CASCADE;
