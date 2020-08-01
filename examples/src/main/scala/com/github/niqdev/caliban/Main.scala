@@ -4,6 +4,7 @@ import caliban.Http4sAdapter
 import caliban.interop.cats.implicits.CatsEffectGraphQL
 import cats.effect.{ ConcurrentEffect, ContextShift, ExitCode, IO, IOApp, Resource, Timer }
 import com.github.niqdev.caliban.repositories.Repositories
+import com.github.niqdev.caliban.resolvers.Resolvers
 import com.github.niqdev.caliban.services.Services
 import log.effect.LogWriter
 import log.effect.fs2.SyncLogWriter.log4sLog
@@ -29,12 +30,12 @@ object Main extends IOApp {
   private[caliban] def server[F[_]: ConcurrentEffect: ContextShift: Timer: LogWriter]: Resource[F, Unit] =
     for {
       _            <- Resource.liftF(LogWriter.info("Start server..."))
-      xa           <- database.initInMemory[F]
+      xa           <- database.initH2[F]
       repositories <- Repositories.make[F](xa)
       services     <- Services.make[F](repositories)
-      api = resolvers.api[F](services)
-      _           <- Resource.liftF(LogWriter.info(s"GraphQL Schema:\n${api.render}"))
-      interpreter <- Resource.liftF(api.interpreterAsync)
+      api          <- Resolvers.make[F](services)
+      _            <- Resource.liftF(LogWriter.info(s"GraphQL Schema:\n${api.render}"))
+      interpreter  <- Resource.liftF(api.interpreterAsync)
       httpApp = Router(
         "/api/graphql" -> Http4sAdapter.makeHttpServiceF(interpreter)
       ).orNotFound

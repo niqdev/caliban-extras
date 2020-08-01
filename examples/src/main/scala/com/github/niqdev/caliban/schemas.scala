@@ -2,6 +2,7 @@ package com.github.niqdev.caliban
 
 import java.time.Instant
 
+import caliban.pagination.arguments._
 import caliban.pagination.schemas._
 import caliban.schema.Annotations.{ GQLInterface, GQLName }
 import com.github.niqdev.caliban.arguments._
@@ -11,6 +12,25 @@ import eu.timepit.refined.types.numeric.{ NonNegLong, PosInt }
 import eu.timepit.refined.types.string.NonEmptyString
 
 object schemas {
+
+  /**
+    * Node roots
+    *
+    * TODO move in caliban.pagination.resolvers
+    */
+  final case class NodeRoot[F[_]](
+    node: NodeArg => F[Option[Node[F]]],
+    nodes: NodesArg => F[List[Option[Node[F]]]]
+  )
+
+  /**
+    * GitHub roots
+    */
+  final case class GitHubRoot[F[_]](
+    user: UserArg => F[Option[UserNode[F]]],
+    repository: RepositoryArg => F[Option[RepositoryNode[F]]],
+    repositories: RepositoriesArg => F[Connection[F, RepositoryNode[F]]]
+  )
 
   // TODO see caliban.pagination.schemas.Node
   @GQLInterface

@@ -8,14 +8,14 @@ import org.flywaydb.core.Flyway
 
 object database {
 
-  final case class Config(
+  private[this] final case class Config(
     connectionUrl: String,
     username: String,
     password: String,
     schema: String
   )
 
-  private[this] def migration[F[_]](config: Config)(implicit F: Sync[F]): F[Int] =
+  private[this] def flywayMigration[F[_]](config: Config)(implicit F: Sync[F]): F[Int] =
     F.delay(
       Flyway
         .configure()
@@ -26,7 +26,7 @@ object database {
         .migrate()
     )
 
-  private[this] def transactor[F[_]: Async: ContextShift](config: Config): Resource[F, H2Transactor[F]] =
+  private[this] def h2Transactor[F[_]: Async: ContextShift](config: Config): Resource[F, H2Transactor[F]] =
     for {
       ec         <- ExecutionContexts.fixedThreadPool[F](32)
       blockingEC <- Blocker[F]
@@ -40,15 +40,15 @@ object database {
     } yield xa
 
   // http://h2database.com/html/main.html
-  def initInMemory[F[_]: Async: ContextShift](implicit log: LogWriter[F]): Resource[F, H2Transactor[F]] = {
+  def initH2[F[_]: Async: ContextShift](implicit log: LogWriter[F]): Resource[F, H2Transactor[F]] = {
     val config = Config("jdbc:h2:mem:example_db;DB_CLOSE_DELAY=-1", "sa", "", "example")
 
     for {
-      _       <- Resource.liftF(log.info(s"Init in-memory database..."))
+      _       <- Resource.liftF(log.info(s"Init H2 ..."))
       _       <- Resource.liftF(log.info(s"config: $config"))
-      version <- Resource.liftF(migration[F](config))
+      version <- Resource.liftF(flywayMigration[F](config))
       _       <- Resource.liftF(log.info(s"migration version: $version"))
-      xa      <- transactor[F](config)
+      xa      <- h2Transactor[F](config)
     } yield xa
   }
 }

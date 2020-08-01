@@ -55,7 +55,13 @@ lazy val doobie = project
   .in(file("modules/doobie"))
   .settings(commonSettings)
   .settings(
-    name := "caliban-extras-doobie"
+    name := "caliban-extras-doobie",
+    libraryDependencies ++= Seq(
+      "org.tpolecat" %% "doobie-core"    % V.doobie,
+      "org.tpolecat" %% "doobie-refined" % V.doobie,
+      "org.tpolecat" %% "doobie-h2"      % V.doobie,
+      "org.flywaydb"  % "flyway-core"    % V.flyway
+    )
   )
 
 lazy val examples = project
@@ -67,10 +73,6 @@ lazy val examples = project
     libraryDependencies ++= Seq(
       "org.http4s"            %% "http4s-dsl"          % V.http4s,
       "org.http4s"            %% "http4s-blaze-server" % V.http4s,
-      "org.tpolecat"          %% "doobie-core"         % V.doobie,
-      "org.tpolecat"          %% "doobie-refined"      % V.doobie,
-      "org.tpolecat"          %% "doobie-h2"           % V.doobie,
-      "org.flywaydb"           % "flyway-core"         % V.flyway,
       "com.github.ghostdogpr" %% "caliban-http4s"      % V.caliban,
       "io.laserdisc"          %% "log-effect-fs2"      % V.logEffect,
       "ch.qos.logback"         % "logback-classic"     % V.logback    % Runtime,
