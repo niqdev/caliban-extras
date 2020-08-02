@@ -11,6 +11,27 @@ A simplified version of GraphQL [GitHub](https://developer.github.com/v4/explore
 sbt -jvm-debug 5005 "examples/runMain com.github.niqdev.caliban.Main"
 ```
 
+TODO
+* [ ] user/users
+* [ ] repository/repositories
+* [ ] issue/issues
+* [ ] pagination
+* [ ] filter
+* [ ] mutations
+* [ ] subscriptions
+* [x] refined
+* [ ] enumeratum (?)
+* [ ] TLS
+* [ ] JWT auth
+* [ ] static GraphiQL
+* [ ] static doc (markdown)
+    - https://github.com/2fd/graphdoc
+    - https://github.com/wayfair/dociql
+    - https://github.com/gjtorikian/graphql-docs
+    - https://github.com/edno/docusaurus2-graphql-doc-generator
+* [ ] helm chart + argocd deployment (live demo)
+* [ ] tests !!!
+
 Sample queries
 
 ```graphql
