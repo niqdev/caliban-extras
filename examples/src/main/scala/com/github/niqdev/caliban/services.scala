@@ -25,9 +25,7 @@ object services {
   sealed abstract class UserService[F[_]](
     userRepo: UserRepo[F],
     repositoryService: RepositoryService[F]
-  )(
-    implicit F: Sync[F]
-  ) {
+  )(implicit F: Sync[F]) {
 
     protected[caliban] val toNode: User => UserNode[F] =
       user => (user, repositoryService.connection(Some(user.id))).encodeFrom[UserNode[F]]
@@ -55,10 +53,9 @@ object services {
     * Repository service
     */
   sealed abstract class RepositoryService[F[_]](
-    repositoryRepo: RepositoryRepo[F]
-  )(
-    implicit F: Sync[F]
-  ) {
+    repositoryRepo: RepositoryRepo[F],
+    issueService: IssueService[F]
+  )(implicit F: Sync[F]) {
 
     protected[caliban] val toNode: Repository => RepositoryNode[F] =
       _.encodeFrom[RepositoryNode[F]]
@@ -114,8 +111,22 @@ object services {
 
   }
   object RepositoryService {
-    def apply[F[_]: Sync](repositoryRepo: RepositoryRepo[F]): RepositoryService[F] =
-      new RepositoryService[F](repositoryRepo) {}
+    def apply[F[_]: Sync](
+      repositoryRepo: RepositoryRepo[F],
+      issueService: IssueService[F]
+    ): RepositoryService[F] =
+      new RepositoryService[F](repositoryRepo, issueService) {}
+  }
+
+  /**
+    * Issue service
+    */
+  sealed abstract class IssueService[F[_]](
+    issueRepo: IssueRepo[F]
+  )(implicit F: Sync[F]) {}
+  object IssueService {
+    def apply[F[_]: Sync](issueRepo: IssueRepo[F]): IssueService[F] =
+      new IssueService[F](issueRepo) {}
   }
 
   /**
@@ -123,10 +134,9 @@ object services {
     */
   sealed abstract class NodeService[F[_]](
     userService: UserService[F],
-    repositoryService: RepositoryService[F]
-  )(
-    implicit F: Sync[F]
-  ) {
+    repositoryService: RepositoryService[F],
+    issueService: IssueService[F]
+  )(implicit F: Sync[F]) {
 
     // TODO create specific error + log WARN
     private[this] def recoverInvalidNode[T <: Node[F]]: PartialFunction[Throwable, Option[T]] = {
@@ -143,13 +153,12 @@ object services {
       F.pure(ids).flatMap(_.traverse(id => findNode(id)))
   }
   object NodeService {
-    def apply[F[_]: Sync](repositories: Repositories[F]): NodeService[F] = {
-      val repositoryService = RepositoryService[F](repositories.repositoryRepo)
-      new NodeService[F](
-        UserService[F](repositories.userRepo, repositoryService),
-        repositoryService
-      ) {}
-    }
+    def apply[F[_]: Sync](
+      userService: UserService[F],
+      repositoryService: RepositoryService[F],
+      issueService: IssueService[F]
+    ): NodeService[F] =
+      new NodeService[F](userService, repositoryService, issueService) {}
   }
 
   /**
@@ -159,17 +168,18 @@ object services {
     def nodeService: NodeService[F]
     def userService: UserService[F]
     def repositoryService: RepositoryService[F]
+    def issueService: IssueService[F]
   }
   object Services {
     private[this] def apply[F[_]: Sync](repos: Repositories[F]) =
       new Services[F] {
-        val nodeService: NodeService[F]             = NodeService[F](repos)
-        val repositoryService: RepositoryService[F] = RepositoryService[F](repos.repositoryRepo)
+        val issueService: IssueService[F]           = IssueService[F](repos.issueRepo)
+        val repositoryService: RepositoryService[F] = RepositoryService[F](repos.repositoryRepo, issueService)
         val userService: UserService[F]             = UserService[F](repos.userRepo, repositoryService)
+        val nodeService: NodeService[F]             = NodeService[F](userService, repositoryService, issueService)
       }
 
     def make[F[_]: Sync](repos: Repositories[F]) =
       Resource.liftF(Sync[F].pure(apply[F](repos)))
   }
-
 }

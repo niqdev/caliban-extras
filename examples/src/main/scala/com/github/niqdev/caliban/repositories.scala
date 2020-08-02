@@ -163,17 +163,28 @@ object repositories {
   }
 
   /**
+    * Issue repository
+    */
+  sealed abstract class IssueRepo[F[_]: Sync](xa: Transactor[F]) {}
+  object IssueRepo {
+    def apply[F[_]: Sync](xa: Transactor[F]): IssueRepo[F] =
+      new IssueRepo[F](xa) {}
+  }
+
+  /**
     * Repositories
     */
   sealed trait Repositories[F[_]] {
     def userRepo: UserRepo[F]
     def repositoryRepo: RepositoryRepo[F]
+    def issueRepo: IssueRepo[F]
   }
   object Repositories {
     private[this] def apply[F[_]: Sync](xa: Transactor[F]): Repositories[F] =
       new Repositories[F] {
         val userRepo: UserRepo[F]             = UserRepo[F](xa)
         val repositoryRepo: RepositoryRepo[F] = RepositoryRepo[F](xa)
+        val issueRepo: IssueRepo[F]           = IssueRepo[F](xa)
       }
 
     def make[F[_]: Sync](xa: Transactor[F]): Resource[F, Repositories[F]] =
