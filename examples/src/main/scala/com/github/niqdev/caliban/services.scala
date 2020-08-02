@@ -17,7 +17,26 @@ import com.github.niqdev.caliban.repositories._
 import com.github.niqdev.caliban.schemas._
 import eu.timepit.refined.types.string.NonEmptyString
 
+// TODO remove annotation
+@scala.annotation.nowarn
 object services {
+
+  sealed abstract class BaseService[F[_], I, N <: Node[F], M](
+    repository: BaseRepository[F, I, M]
+  )(
+    implicit F: Sync[F],
+    idSchemaDecoder: SchemaDecoder[NodeId, I]
+  ) {
+    // from model to schema (node)
+    protected def toNode: M => N
+
+    def findNode(id: NodeId): F[Option[N]] =
+      F.fromEither(idSchemaDecoder.to(id))
+        .flatMap(repository.findById)
+        .nested
+        .map(toNode)
+        .value
+  }
 
   /**
     * User service
@@ -25,17 +44,11 @@ object services {
   sealed abstract class UserService[F[_]](
     userRepo: UserRepo[F],
     repositoryService: RepositoryService[F]
-  )(implicit F: Sync[F]) {
+  )(implicit F: Sync[F])
+      extends BaseService[F, UserId, UserNode[F], User](userRepo) {
 
-    protected[caliban] val toNode: User => UserNode[F] =
+    override protected val toNode: User => UserNode[F] =
       user => (user, repositoryService.connection(Some(user.id))).encodeFrom[UserNode[F]]
-
-    def findNode(id: NodeId): F[Option[UserNode[F]]] =
-      F.fromEither(SchemaDecoder[NodeId, UserId].to(id))
-        .flatMap(userRepo.findById)
-        .nested
-        .map(toNode)
-        .value
 
     def findByName(name: NonEmptyString): F[Option[UserNode[F]]] =
       userRepo.findByName(name).nested.map(toNode).value
@@ -55,20 +68,14 @@ object services {
   sealed abstract class RepositoryService[F[_]](
     repositoryRepo: RepositoryRepo[F],
     issueService: IssueService[F]
-  )(implicit F: Sync[F]) {
+  )(implicit F: Sync[F])
+      extends BaseService[F, RepositoryId, RepositoryNode[F], Repository](repositoryRepo) {
 
-    protected[caliban] val toNode: Repository => RepositoryNode[F] =
+    override protected val toNode: Repository => RepositoryNode[F] =
       _.encodeFrom[RepositoryNode[F]]
 
     protected[caliban] val toEdge: Repository => RowNumber => Edge[F, RepositoryNode[F]] =
       repository => rowNumber => (repository -> rowNumber).encodeFrom[Edge[F, RepositoryNode[F]]]
-
-    def findNode(id: NodeId): F[Option[RepositoryNode[F]]] =
-      F.fromEither(SchemaDecoder[NodeId, RepositoryId].to(id))
-        .flatMap(repositoryRepo.findById)
-        .nested
-        .map(toNode)
-        .value
 
     def findByName(name: NonEmptyString): F[Option[RepositoryNode[F]]] =
       repositoryRepo.findByName(name).nested.map(toNode).value

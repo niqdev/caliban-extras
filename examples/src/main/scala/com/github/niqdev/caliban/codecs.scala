@@ -101,6 +101,7 @@ object codecs {
     def to(schema: A): Either[Throwable, B]
   }
 
+  // TODO move prefix in caliban Schema/ArgBuilder
   object SchemaDecoder {
     def apply[A, B](implicit ev: SchemaDecoder[A, B]): SchemaDecoder[A, B] = ev
 
@@ -115,6 +116,9 @@ object codecs {
 
     implicit lazy val repositoryIdSchemaDecoder: SchemaDecoder[NodeId, RepositoryId] =
       schema => uuidSchemaDecoder(RepositoryNode.idPrefix).to(schema).map(RepositoryId.apply)
+
+    implicit lazy val issueIdSchemaDecoder: SchemaDecoder[NodeId, IssueId] =
+      schema => uuidSchemaDecoder(IssueNode.idPrefix).to(schema).map(IssueId.apply)
 
     implicit lazy val cursorSchemaDecoder: SchemaDecoder[Cursor, RowNumber] =
       schema =>
