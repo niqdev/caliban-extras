@@ -76,29 +76,41 @@ object services {
     def findByName(name: NonEmptyString): F[Option[RepositoryNode[F]]] =
       repositoryRepo.findByName(name).nested.map(toNode).value
 
-    // TODO
+    // supports Forward Pagination only
     def connection(maybeUserId: Option[UserId]): RepositoriesArg => F[Connection[F, RepositoryNode[F]]] =
-      paginationArg =>
+      paginationArg => {
+
+        def isFullSize(repositories: List[(Repository, RowNumber)], limit: Limit) =
+          repositories.length == limit.value.value
+
+        def dropLastRepository(repositories: List[(Repository, RowNumber)], limit: Limit) =
+          if (isFullSize(repositories, limit)) repositories.dropRight(1)
+          else repositories
+
         for {
           limit <- F.fromEither(SchemaDecoder[First, Limit].to(paginationArg.first))
+          limitPlusOne = Limit.inc(limit)
           nextRowNumber <- F.fromEither(
             SchemaDecoder[Option[Cursor], Option[RowNumber]].to(paginationArg.after)
           )
-          repositories <- maybeUserId.fold(repositoryRepo.find(limit, nextRowNumber))(
-            repositoryRepo.findByUserId(limit, nextRowNumber)
+          // try to fetch N+1 repositories to efficiently verify hasNextPage
+          repositoriesPlusOne <- maybeUserId.fold(repositoryRepo.find(limitPlusOne, nextRowNumber))(
+            repositoryRepo.findByUserId(limitPlusOne, nextRowNumber)
           )
+          repositories = dropLastRepository(repositoriesPlusOne, limitPlusOne)
           edges <- F.pure(repositories).nested.map(repository => toEdge(repository._1)(repository._2)).value
           nodes <- F.pure(repositories).nested.map(repository => toNode(repository._1)).value
           pageInfo <- F.pure {
             PageInfo(
-              true, // TODO
-              false,
+              isFullSize(repositoriesPlusOne, limitPlusOne),
+              false, // default false
               repositories.head._2.encodeFrom[Cursor],
               repositories.last._2.encodeFrom[Cursor]
             )
           }
-          totalCount <- repositoryRepo.count
+          totalCount <- maybeUserId.fold(repositoryRepo.count)(repositoryRepo.countByUserId)
         } yield Connection(edges, nodes, pageInfo, totalCount)
+      }
 
   }
   object RepositoryService {

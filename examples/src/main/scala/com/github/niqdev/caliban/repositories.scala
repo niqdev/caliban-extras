@@ -29,6 +29,10 @@ object repositories {
 
   @newtype case class RowNumber(value: PosLong)
   @newtype case class Limit(value: NonNegInt)
+  object Limit {
+    def inc(limit: Limit): Limit =
+      Limit(NonNegInt.unsafeFrom(limit.value.value + 1))
+  }
 
   /**
     * User repository

@@ -22,6 +22,7 @@ object resolvers {
       GraphQL.graphQL(RootResolver(NodeQueries.resolver[F](services)))
   }
 
+  // TODO add: users, issue, issues
   object GitHubRootResolver {
     object GitHubQueries {
       private[resolvers] def resolver[F[_]: Effect](services: Services[F]): GitHubRoot[F] =
