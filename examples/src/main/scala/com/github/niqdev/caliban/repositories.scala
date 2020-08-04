@@ -27,6 +27,7 @@ object repositories {
     R: Meta[R]
   ): Meta[N] = ev(R)
 
+  // TODO count NonNegLong
   @newtype case class RowNumber(value: PosLong)
   @newtype case class Limit(value: NonNegInt)
   object Limit {
@@ -42,8 +43,7 @@ object repositories {
   /**
     * User repository
     */
-  sealed abstract class UserRepo[F[_]: Sync](xa: Transactor[F])
-    extends BaseRepository[F, UserId, User] {
+  sealed abstract class UserRepo[F[_]: Sync](xa: Transactor[F]) extends BaseRepository[F, UserId, User] {
 
     override def findById(id: UserId): F[Option[User]] =
       UserRepo.queries.findById(id).query[User].option.transact(xa)
@@ -81,7 +81,7 @@ object repositories {
     * Repository repository
     */
   sealed abstract class RepositoryRepo[F[_]: Sync](xa: Transactor[F])
-    extends BaseRepository[F, RepositoryId, Repository] {
+      extends BaseRepository[F, RepositoryId, Repository] {
 
     override def findById(id: RepositoryId): F[Option[Repository]] =
       RepositoryRepo.queries.findById(id).query[Repository].option.transact(xa)
@@ -174,7 +174,19 @@ object repositories {
     */
   // TODO remove annotation
   @scala.annotation.nowarn
-  sealed abstract class IssueRepo[F[_]: Sync](xa: Transactor[F]) {}
+  sealed abstract class IssueRepo[F[_]: Sync](xa: Transactor[F]) extends BaseRepository[F, IssueId, Issue] {
+    override def findById(id: IssueId): F[Option[Issue]] = ???
+
+    def findByNumber(number: NonEmptyString): F[Option[Issue]] = ???
+
+    def findByRepositoryId(limit: Limit, nextRowNumber: Option[RowNumber])(
+      repositoryId: RepositoryId
+    ): F[List[(Issue, RowNumber)]] = ???
+
+    override def count: F[NonNegLong] = ???
+
+    def countByRepositoryId(repositoryId: RepositoryId): F[NonNegLong] = ???
+  }
   object IssueRepo {
     def apply[F[_]: Sync](xa: Transactor[F]): IssueRepo[F] =
       new IssueRepo[F](xa) {}

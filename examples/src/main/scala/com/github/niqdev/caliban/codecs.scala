@@ -3,9 +3,7 @@ package com.github.niqdev.caliban
 import java.util.UUID
 
 import caliban.pagination.Base64String
-import caliban.pagination.schemas.{ Cursor, First, NodeId }
 import cats.syntax.either._
-import com.github.niqdev.caliban.arguments.RepositoriesArg
 import com.github.niqdev.caliban.models._
 import com.github.niqdev.caliban.repositories._
 import com.github.niqdev.caliban.schemas._

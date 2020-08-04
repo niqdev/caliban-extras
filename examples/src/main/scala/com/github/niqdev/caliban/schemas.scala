@@ -2,16 +2,53 @@ package com.github.niqdev.caliban
 
 import java.time.Instant
 
-import caliban.pagination.arguments._
-import caliban.pagination.schemas._
+import caliban.filter.arguments.{ Filter, FilterArg }
+import caliban.pagination.Base64String
 import caliban.schema.Annotations.{ GQLInterface, GQLName }
-import com.github.niqdev.caliban.arguments._
 import eu.timepit.refined.api.Refined
 import eu.timepit.refined.string.Url
-import eu.timepit.refined.types.numeric.{ NonNegLong, PosInt }
+import eu.timepit.refined.types.numeric.{ NonNegInt, NonNegLong, PosInt }
 import eu.timepit.refined.types.string.NonEmptyString
+import io.estatico.newtype.macros.newtype
 
 object schemas {
+
+  @newtype case class NodeId(value: Base64String)
+  @newtype case class Cursor(value: Base64String)
+  @newtype case class First(value: NonNegInt)
+  @newtype case class Last(value: NonNegInt)
+
+  // TODO every Node must have a prefix
+  // TODO create Cursor sealed trait with prefix
+  object Cursor {
+    final val prefix = "cursor:v1:"
+  }
+
+  // TODO move in caliban.pagination.arguments
+  trait ForwardPaginationArg {
+    def first: First
+    // "after" is the cursor of the last edge in the previous page
+    def after: Option[Cursor]
+  }
+
+  // TODO move in caliban.pagination.arguments
+  trait BackwardPaginationArg {
+    def last: Last
+    // "before" is the cursor of the first edge in the next page
+    def before: Option[Cursor]
+  }
+
+  // TODO move in caliban.pagination.arguments
+  final case class NodeArg(id: NodeId)
+  // TODO move in caliban.pagination.arguments
+  final case class NodesArg(ids: List[NodeId])
+  final case class UserArg(name: NonEmptyString, filters: Option[Filter]) extends FilterArg
+  final case class UsersArg(first: First, after: Option[Cursor])          extends ForwardPaginationArg
+  final case class RepositoryArg(name: NonEmptyString)
+  // TODO RepositoriesArg(first*, after, orderBy: {direction*, field*}, filters) * is mandatory
+  final case class RepositoriesArg(first: First, after: Option[Cursor]) extends ForwardPaginationArg
+  final case class IssueArg(number: PosInt)
+  final case class IssuesArg(first: First, after: Option[Cursor]) extends ForwardPaginationArg
 
   /**
     * Node roots
@@ -32,7 +69,7 @@ object schemas {
     repositories: RepositoriesArg => F[Connection[F, RepositoryNode[F]]]
   )
 
-  // TODO see caliban.pagination.schemas.Node
+  // TODO move in caliban.pagination not sealed and not higher-kinded
   @GQLInterface
   @GQLName("Node")
   sealed trait Node[F[_]] {
@@ -97,7 +134,7 @@ object schemas {
     val idPrefix = "repository:v1:"
   }
 
-  // TODO add example of enumeratum
+  // TODO add example of enumeratum (?)
   sealed trait IssueStatus
   object IssueStatus {
     final case object OPEN  extends IssueStatus

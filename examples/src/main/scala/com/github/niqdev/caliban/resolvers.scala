@@ -29,7 +29,7 @@ object resolvers {
         GitHubRoot(
           user = userArg => services.userService.findByName(userArg.name),
           repository = repositoryArg => services.repositoryService.findByName(repositoryArg.name),
-          repositories = services.repositoryService.connection(None)
+          repositories = services.repositoryService.findRepositoryConnection(None)
         )
     }
     def api[F[_]: Effect](services: Services[F]): GraphQL[Any] =
