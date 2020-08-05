@@ -10,11 +10,20 @@ final class Base64StringSpec extends AnyWordSpecLike with Matchers {
 
   "Base64String" should {
 
-    "verify encode" in {
+    "verify valid encode" in {
       Base64String.encode("hello") shouldBe Right(helloBase64)
     }
 
-    "verify decode" in {
+    "verify invalid encode" in {
+      Base64String.encode("") match {
+        case Left(error) =>
+          error.getMessage should startWith("Predicate failed")
+        case _ =>
+          fail("unexpected error")
+      }
+    }
+
+    "verify valid decode" in {
       Base64String.decode(helloBase64) shouldBe Right("hello")
     }
 
