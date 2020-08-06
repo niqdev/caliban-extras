@@ -11,6 +11,8 @@ import eu.timepit.refined.types.string.NonEmptyString
 import io.estatico.newtype.Coercible
 import io.estatico.newtype.macros.newtype
 
+// TODO remove annotation
+@scala.annotation.nowarn
 object repositories {
 
   import doobie.implicits.legacy.instant.JavaTimeInstantMeta
@@ -27,8 +29,8 @@ object repositories {
     R: Meta[R]
   ): Meta[N] = ev(R)
 
-  // TODO count NonNegLong
   @newtype case class RowNumber(value: PosLong)
+  @newtype case class Count(value: NonNegLong)
   @newtype case class Limit(value: NonNegInt)
   object Limit {
     def inc(limit: Limit): Limit =
@@ -37,7 +39,7 @@ object repositories {
 
   trait BaseRepository[F[_], I, M] {
     def findById(id: I): F[Option[M]]
-    def count: F[NonNegLong]
+    def count: F[Count]
   }
 
   /**
@@ -51,8 +53,10 @@ object repositories {
     def findByName(name: NonEmptyString): F[Option[User]] =
       UserRepo.queries.findByName(name).query[User].option.transact(xa)
 
-    override def count: F[NonNegLong] =
-      UserRepo.queries.count.query[NonNegLong].unique.transact(xa)
+    def find(limit: Limit, nextRowNumber: Option[RowNumber]): F[List[(User, RowNumber)]] = ???
+
+    override def count: F[Count] =
+      UserRepo.queries.count.query[Count].unique.transact(xa)
   }
   object UserRepo {
     def apply[F[_]: Sync](xa: Transactor[F]): UserRepo[F] =
@@ -107,11 +111,11 @@ object repositories {
         .to[List]
         .transact(xa)
 
-    override def count: F[NonNegLong] =
-      RepositoryRepo.queries.count.query[NonNegLong].unique.transact(xa)
+    override def count: F[Count] =
+      RepositoryRepo.queries.count.query[Count].unique.transact(xa)
 
-    def countByUserId(userId: UserId): F[NonNegLong] =
-      RepositoryRepo.queries.countByUserId(userId).query[NonNegLong].unique.transact(xa)
+    def countByUserId(userId: UserId): F[Count] =
+      RepositoryRepo.queries.countByUserId(userId).query[Count].unique.transact(xa)
   }
   object RepositoryRepo {
     def apply[F[_]: Sync](xa: Transactor[F]): RepositoryRepo[F] =
@@ -172,8 +176,6 @@ object repositories {
   /**
     * Issue repository
     */
-  // TODO remove annotation
-  @scala.annotation.nowarn
   sealed abstract class IssueRepo[F[_]: Sync](xa: Transactor[F]) extends BaseRepository[F, IssueId, Issue] {
 
     override def findById(id: IssueId): F[Option[Issue]] =
@@ -188,10 +190,10 @@ object repositories {
       repositoryId: RepositoryId
     ): F[List[(Issue, RowNumber)]] = ???
 
-    override def count: F[NonNegLong] =
-      IssueRepo.queries.count.query[NonNegLong].unique.transact(xa)
+    override def count: F[Count] =
+      IssueRepo.queries.count.query[Count].unique.transact(xa)
 
-    def countByRepositoryId(repositoryId: RepositoryId): F[NonNegLong] = ???
+    def countByRepositoryId(repositoryId: RepositoryId): F[Count] = ???
   }
   object IssueRepo {
     def apply[F[_]: Sync](xa: Transactor[F]): IssueRepo[F] =
