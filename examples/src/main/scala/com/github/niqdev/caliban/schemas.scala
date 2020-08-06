@@ -65,8 +65,11 @@ object schemas {
     */
   final case class GitHubRoot[F[_]](
     user: UserArg => F[Option[UserNode[F]]],
+    users: UsersArg => F[Connection[F, UserNode[F]]],
     repository: RepositoryArg => F[Option[RepositoryNode[F]]],
-    repositories: RepositoriesArg => F[Connection[F, RepositoryNode[F]]]
+    repositories: RepositoriesArg => F[Connection[F, RepositoryNode[F]]],
+    issue: IssueArg => F[Option[IssueNode[F]]],
+    issues: IssuesArg => F[Connection[F, IssueNode[F]]]
   )
 
   // TODO move in caliban.pagination not sealed and not higher-kinded
@@ -112,7 +115,7 @@ object schemas {
     name: NonEmptyString,
     createdAt: Instant,
     updatedAt: Instant,
-    //repository: RepositoryArg => F[RepositoryNode[F]]
+    repository: RepositoryArg => F[RepositoryNode[F]],
     repositories: RepositoriesArg => F[Connection[F, RepositoryNode[F]]]
   ) extends Node[F]
   object UserNode {
@@ -126,9 +129,9 @@ object schemas {
     url: String Refined Url,
     isFork: Boolean,
     createdAt: Instant,
-    updatedAt: Instant
-    //issue: IssueArg => F[IssueNode[F]]
-    //issues: IssuesArg => F[Connection[F, IssueNode[F]]]
+    updatedAt: Instant,
+    issue: IssueArg => F[IssueNode[F]],
+    issues: IssuesArg => F[Connection[F, IssueNode[F]]]
   ) extends Node[F]
   object RepositoryNode {
     val idPrefix = "repository:v1:"
