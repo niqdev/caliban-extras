@@ -6,7 +6,7 @@ import doobie.syntax.all._
 import doobie.util.fragment.Fragment
 import doobie.util.meta.Meta
 import doobie.util.transactor.Transactor
-import eu.timepit.refined.types.numeric.{ NonNegInt, NonNegLong, PosLong }
+import eu.timepit.refined.types.numeric.{ NonNegInt, NonNegLong, PosInt, PosLong }
 import eu.timepit.refined.types.string.NonEmptyString
 import io.estatico.newtype.Coercible
 import io.estatico.newtype.macros.newtype
@@ -14,8 +14,8 @@ import io.estatico.newtype.macros.newtype
 object repositories {
 
   import doobie.implicits.legacy.instant.JavaTimeInstantMeta
-  import doobie.refined.implicits.refinedMeta
   import doobie.h2.implicits.UuidType
+  import doobie.refined.implicits.refinedMeta
 
   // enable default logging
   private[this] implicit val logHandler =
@@ -58,7 +58,7 @@ object repositories {
     def apply[F[_]: Sync](xa: Transactor[F]): UserRepo[F] =
       new UserRepo[F](xa) {}
 
-    private[caliban] object queries {
+    private[UserRepo] object queries {
       private[this] val schemaName = "example"
       private[this] val tableName  = "user"
       private[this] val tableFrom  = Fragment.const(s" FROM $schemaName.$tableName ")
@@ -118,7 +118,7 @@ object repositories {
       new RepositoryRepo[F](xa) {}
 
     // TODO orderBy: default updated_at
-    private[caliban] object queries {
+    private[RepositoryRepo] object queries {
       private[this] val schemaName = "example"
       private[this] val tableName  = "repository"
       private[this] val tableFrom  = Fragment.const(s" FROM $schemaName.$tableName ")
@@ -175,21 +175,45 @@ object repositories {
   // TODO remove annotation
   @scala.annotation.nowarn
   sealed abstract class IssueRepo[F[_]: Sync](xa: Transactor[F]) extends BaseRepository[F, IssueId, Issue] {
-    override def findById(id: IssueId): F[Option[Issue]] = ???
 
-    def findByNumber(number: NonEmptyString): F[Option[Issue]] = ???
+    override def findById(id: IssueId): F[Option[Issue]] =
+      IssueRepo.queries.findById(id).query[Issue].option.transact(xa)
+
+    def findByNumber(number: PosInt): F[Option[Issue]] =
+      IssueRepo.queries.findByNumber(number).query[Issue].option.transact(xa)
+
+    def find(limit: Limit, nextRowNumber: Option[RowNumber]): F[List[(Issue, RowNumber)]] = ???
 
     def findByRepositoryId(limit: Limit, nextRowNumber: Option[RowNumber])(
       repositoryId: RepositoryId
     ): F[List[(Issue, RowNumber)]] = ???
 
-    override def count: F[NonNegLong] = ???
+    override def count: F[NonNegLong] =
+      IssueRepo.queries.count.query[NonNegLong].unique.transact(xa)
 
     def countByRepositoryId(repositoryId: RepositoryId): F[NonNegLong] = ???
   }
   object IssueRepo {
     def apply[F[_]: Sync](xa: Transactor[F]): IssueRepo[F] =
       new IssueRepo[F](xa) {}
+
+    private[IssueRepo] object queries {
+      private[this] val schemaName = "example"
+      private[this] val tableName  = "issue"
+      private[this] val tableFrom  = Fragment.const(s" FROM $schemaName.$tableName ")
+
+      private[this] lazy val findAll: Fragment =
+        fr"SELECT id, repository_id, number, status, title, body, created_at, updated_at" ++ tableFrom
+
+      lazy val findById: IssueId => Fragment =
+        id => findAll ++ fr"WHERE id = $id"
+
+      lazy val findByNumber: PosInt => Fragment =
+        number => findAll ++ fr"WHERE number = $number"
+
+      lazy val count: Fragment =
+        fr"SELECT COUNT(*)" ++ tableFrom
+    }
   }
 
   /**
