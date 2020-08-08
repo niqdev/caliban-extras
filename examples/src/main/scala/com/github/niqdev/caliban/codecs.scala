@@ -10,98 +10,124 @@ import com.github.niqdev.caliban.schemas._
 import eu.timepit.refined.types.numeric.PosLong
 
 // TODO use magnolia for typeclass derivation
-// TODO SchemaDecoderOps + move instances in sealed traits
 object codecs {
 
   /**
-    * Schema encoder
+    * Encodes a model into a GraphQL schema
     */
-  trait SchemaEncoder[A, B] {
-    def from(model: A): B
+  trait SchemaEncoder[M, S] {
+    def from(model: M): S
   }
 
   object SchemaEncoder {
-    def apply[A, B](implicit ev: SchemaEncoder[A, B]): SchemaEncoder[A, B] = ev
+    def apply[M, S](implicit ev: SchemaEncoder[M, S]): SchemaEncoder[M, S] = ev
 
-    // TODO option.get ???
     implicit lazy val cursorSchemaEncoder: SchemaEncoder[RowNumber, Cursor] =
-      rowNumber =>
+      model =>
         Base64String
-          .encodeWithPrefix(s"${rowNumber.value.value}", Cursor.prefix)
+          .encodeWithPrefix(s"${model.value.value}", Cursor.prefix)
           .map(Cursor.apply)
           .toOption
           .get
 
-    implicit lazy val userNodeIdSchemaEncoder: SchemaEncoder[UserId, NodeId] =
+    private[this] def uuidSchemaEncoder(prefix: String): SchemaEncoder[UUID, NodeId] =
       model =>
         Base64String
-          .encodeWithPrefix(s"${model.value.toString}", UserNode.idPrefix)
+          .encodeWithPrefix(model.toString, prefix)
           .map(NodeId.apply)
           .toOption
           .get
 
-    implicit def userNodeSchemaEncoder[F[_]](
-      implicit uniSchemaEncoder: SchemaEncoder[UserId, NodeId]
-    ): SchemaEncoder[(User, RepositoriesArg => F[Connection[F, RepositoryNode[F]]]), UserNode[F]] = {
-      case (user, getRepositoryConnectionF) =>
+    implicit lazy val userIdSchemaEncoder: SchemaEncoder[UserId, NodeId] =
+      model => uuidSchemaEncoder(UserNode.idPrefix).from(model.value)
+
+    implicit lazy val repositoryIdSchemaEncoder: SchemaEncoder[RepositoryId, NodeId] =
+      model => uuidSchemaEncoder(RepositoryNode.idPrefix).from(model.value)
+
+    implicit lazy val issueIdSchemaEncoder: SchemaEncoder[IssueId, NodeId] =
+      model => uuidSchemaEncoder(IssueNode.idPrefix).from(model.value)
+
+    implicit def userSchemaEncoder[F[_]](
+      implicit idSchemaEncoder: SchemaEncoder[UserId, NodeId]
+    ): SchemaEncoder[
+      (User, RepositoryArg => F[RepositoryNode[F]], RepositoriesArg => F[Connection[F, RepositoryNode[F]]]),
+      UserNode[F]
+    ] = {
+      case (model, getRepositoryF, getRepositoriesF) =>
         UserNode(
-          id = uniSchemaEncoder.from(user.id),
-          name = user.name.value,
-          createdAt = user.createdAt,
-          updatedAt = user.updatedAt,
-          repositories = getRepositoryConnectionF
+          id = idSchemaEncoder.from(model.id),
+          name = model.name.value,
+          createdAt = model.createdAt,
+          updatedAt = model.updatedAt,
+          repository = getRepositoryF,
+          repositories = getRepositoriesF
         )
     }
 
-    implicit lazy val repositoryNodeIdSchemaEncoder: SchemaEncoder[RepositoryId, NodeId] =
-      model =>
-        Base64String
-          .encode(s"${RepositoryNode.idPrefix}${model.value.toString}")
-          .map(NodeId.apply)
-          .toOption
-          .get
-
-    implicit def repositoryNodeSchemaEncoder[F[_]](
-      implicit rniSchemaEncoder: SchemaEncoder[RepositoryId, NodeId]
-    ): SchemaEncoder[Repository, RepositoryNode[F]] =
-      model =>
+    implicit def repositorySchemaEncoder[F[_]](
+      implicit idSchemaEncoder: SchemaEncoder[RepositoryId, NodeId]
+    ): SchemaEncoder[
+      (Repository, IssueArg => F[IssueNode[F]], IssuesArg => F[Connection[F, IssueNode[F]]]),
+      RepositoryNode[F]
+    ] = {
+      case (model, getIssueF, getIssuesF) =>
         RepositoryNode(
-          id = rniSchemaEncoder.from(model.id),
+          id = idSchemaEncoder.from(model.id),
           name = model.name.value,
           url = model.url.value,
           isFork = model.isFork,
           createdAt = model.createdAt,
+          updatedAt = model.updatedAt,
+          issue = getIssueF,
+          issues = getIssuesF
+        )
+    }
+
+    implicit def issueSchemaEncoder[F[_]](
+      implicit idSchemaEncoder: SchemaEncoder[IssueId, NodeId]
+    ): SchemaEncoder[Issue, IssueNode[F]] =
+      model =>
+        IssueNode(
+          id = idSchemaEncoder.from(model.id),
+          number = model.number.value,
+          status = model.status match {
+            case models.IssueStatus.Open =>
+              schemas.IssueStatus.OPEN
+            case models.IssueStatus.Close =>
+              schemas.IssueStatus.CLOSE
+          },
+          title = model.title.value,
+          body = model.body.value,
+          createdAt = model.createdAt,
           updatedAt = model.updatedAt
         )
 
-    implicit def repositoryEdgeSchemaEncoder[F[_]](
+    implicit def edgeSchemaEncoder[F[_], M, S <: Node[F]](
       implicit cSchemaEncoder: SchemaEncoder[RowNumber, Cursor],
-      //rniSchemaEncoder: SchemaEncoder[RepositoryId, NodeId],
-      rnSchemaEncoder: SchemaEncoder[Repository, RepositoryNode[F]]
-    ): SchemaEncoder[(Repository, RowNumber), Edge[F, RepositoryNode[F]]] = {
+      nSchemaEncoder: SchemaEncoder[M, S]
+    ): SchemaEncoder[(M, RowNumber), Edge[F, S]] = {
       case (model, rowNumber) =>
         Edge(
           cursor = cSchemaEncoder.from(rowNumber),
-          node = rnSchemaEncoder.from(model)
+          node = nSchemaEncoder.from(model)
         )
     }
   }
 
-  final class SchemaEncoderOps[A](private val model: A) extends AnyVal {
-    def encodeFrom[B](implicit schemaEncoder: SchemaEncoder[A, B]): B =
+  final class SchemaEncoderOps[M](private val model: M) extends AnyVal {
+    def encodeFrom[S](implicit schemaEncoder: SchemaEncoder[M, S]): S =
       schemaEncoder.from(model)
   }
 
   /**
-    * Schema decoder
+    * Decodes a GraphQL schema into a model
     */
-  trait SchemaDecoder[A, B] {
-    def to(schema: A): Either[Throwable, B]
+  trait SchemaDecoder[S, M] {
+    def to(schema: S): Either[Throwable, M]
   }
 
-  // TODO move prefix in caliban Schema/ArgBuilder
   object SchemaDecoder {
-    def apply[A, B](implicit ev: SchemaDecoder[A, B]): SchemaDecoder[A, B] = ev
+    def apply[S, M](implicit ev: SchemaDecoder[S, M]): SchemaDecoder[S, M] = ev
 
     private[this] def uuidSchemaDecoder(prefix: String): SchemaDecoder[NodeId, UUID] =
       schema =>
@@ -128,9 +154,9 @@ object codecs {
     implicit lazy val firstSchemaDecoder: SchemaDecoder[First, Limit] =
       schema => Limit(schema.value).asRight[Throwable]
 
-    implicit def optionSchemaDecoder[I, O](
-      implicit schemaDecoder: SchemaDecoder[I, O]
-    ): SchemaDecoder[Option[I], Option[O]] =
-      maybeSchema => maybeSchema.fold(Option.empty[O])(i => schemaDecoder.to(i).toOption).asRight[Throwable]
+    implicit def optionSchemaDecoder[S, M](
+      implicit schemaDecoder: SchemaDecoder[S, M]
+    ): SchemaDecoder[Option[S], Option[M]] =
+      maybeSchema => maybeSchema.fold(Option.empty[M])(i => schemaDecoder.to(i).toOption).asRight[Throwable]
   }
 }

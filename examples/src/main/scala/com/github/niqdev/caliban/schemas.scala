@@ -79,9 +79,9 @@ object schemas {
     def id: NodeId
   }
 
-  final case class Edge[F[_], T <: Node[F]](
+  final case class Edge[F[_], N <: Node[F]](
     cursor: Cursor,
-    node: T
+    node: N
   )
 
   /*
@@ -102,9 +102,9 @@ object schemas {
     endCursor: Cursor
   )
 
-  final case class Connection[F[_], T <: Node[F]](
-    edges: List[Edge[F, T]],
-    nodes: List[T],
+  final case class Connection[F[_], N <: Node[F]](
+    edges: List[Edge[F, N]],
+    nodes: List[N],
     pageInfo: PageInfo,
     totalCount: NonNegLong
   )
