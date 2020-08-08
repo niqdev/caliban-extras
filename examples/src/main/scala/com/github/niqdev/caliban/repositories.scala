@@ -93,23 +93,23 @@ object repositories {
     def findByName(name: NonEmptyString): F[Option[Repository]] =
       RepositoryRepo.queries.findByName(name).query[Repository].option.transact(xa)
 
-    def find(limit: Limit, nextRowNumber: Option[RowNumber]): F[List[(Repository, RowNumber)]] =
-      RepositoryRepo
-        .queries
-        .find(limit, nextRowNumber)
-        .query[(Repository, RowNumber)]
-        .to[List]
-        .transact(xa)
+    val find: (Limit, Option[RowNumber]) => F[List[(Repository, RowNumber)]] =
+      (limit, nextRowNumber) =>
+        RepositoryRepo
+          .queries
+          .find(limit, nextRowNumber)
+          .query[(Repository, RowNumber)]
+          .to[List]
+          .transact(xa)
 
-    def findByUserId(limit: Limit, nextRowNumber: Option[RowNumber])(
-      userId: UserId
-    ): F[List[(Repository, RowNumber)]] =
-      RepositoryRepo
-        .queries
-        .findByUserId(limit, nextRowNumber)(userId)
-        .query[(Repository, RowNumber)]
-        .to[List]
-        .transact(xa)
+    def findByUserId(userId: UserId): (Limit, Option[RowNumber]) => F[List[(Repository, RowNumber)]] =
+      (limit, nextRowNumber) =>
+        RepositoryRepo
+          .queries
+          .findByUserId(limit, nextRowNumber)(userId)
+          .query[(Repository, RowNumber)]
+          .to[List]
+          .transact(xa)
 
     override def count: F[Count] =
       RepositoryRepo.queries.count.query[Count].unique.transact(xa)
@@ -184,11 +184,11 @@ object repositories {
     def findByNumber(number: PosInt): F[Option[Issue]] =
       IssueRepo.queries.findByNumber(number).query[Issue].option.transact(xa)
 
-    def find(limit: Limit, nextRowNumber: Option[RowNumber]): F[List[(Issue, RowNumber)]] = ???
+    val find: (Limit, Option[RowNumber]) => F[List[(Issue, RowNumber)]] = ???
 
-    def findByRepositoryId(limit: Limit, nextRowNumber: Option[RowNumber])(
+    def findByRepositoryId(
       repositoryId: RepositoryId
-    ): F[List[(Issue, RowNumber)]] = ???
+    ): (Limit, Option[RowNumber]) => F[List[(Issue, RowNumber)]] = ???
 
     override def count: F[Count] =
       IssueRepo.queries.count.query[Count].unique.transact(xa)

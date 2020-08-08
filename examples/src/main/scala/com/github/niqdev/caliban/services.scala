@@ -8,13 +8,12 @@ import cats.syntax.flatMap._
 import cats.syntax.foldable._
 import cats.syntax.functor._
 import cats.syntax.nested._
+import cats.syntax.option._
 import cats.syntax.traverse._
 import com.github.niqdev.caliban.codecs._
 import com.github.niqdev.caliban.models._
 import com.github.niqdev.caliban.repositories._
 import com.github.niqdev.caliban.schemas._
-import eu.timepit.refined.types.numeric.NonNegLong
-import eu.timepit.refined.types.string.NonEmptyString
 
 // TODO remove annotation
 @scala.annotation.nowarn
@@ -43,15 +42,16 @@ object services {
     repository: BaseRepository[F, I, M]
   )(
     implicit F: Sync[F],
-    idSchemaDecoder: SchemaDecoder[NodeId, I]
+    idSchemaDecoder: SchemaDecoder[NodeId, I],
+    nodeSchemaEncoder: SchemaEncoder[M, N]
   ) extends BaseService[F, I, N, M](repository) {
 
-    // TODO implement for all
-    protected def toEdge: M => RowNumber => Edge[F, N]
+    protected def toEdge: M => RowNumber => Edge[F, N] =
+      model => rowNumber => SchemaEncoder[(M, RowNumber), Edge[F, N]].from(model -> rowNumber)
 
     protected def findConnection(
       findItems: (Limit, Option[RowNumber]) => F[List[(M, RowNumber)]],
-      countItems: => F[NonNegLong]
+      countItems: => F[Count]
     ): ForwardPaginationArg => F[Connection[F, N]] =
       paginationArg => {
 
@@ -68,7 +68,7 @@ object services {
           nextRowNumber <- F.fromEither(
             SchemaDecoder[Option[Cursor], Option[RowNumber]].to(paginationArg.after)
           )
-          // try to fetch N+1 items to efficiently verify hasNextPage
+          // fetch N+1 items to efficiently verify hasNextPage
           itemsPlusOne <- findItems(limitPlusOne, nextRowNumber)
           items = dropLastItem(itemsPlusOne, limitPlusOne)
           edges <- F.pure(items).nested.map(repository => toEdge(repository._1)(repository._2)).value
@@ -81,7 +81,7 @@ object services {
               items.last._2.encodeFrom[Cursor]
             )
           }
-          totalCount <- countItems
+          totalCount <- countItems.map(_.value)
         } yield Connection(edges, nodes, pageInfo, totalCount)
       }
   }
@@ -92,14 +92,18 @@ object services {
   sealed abstract class UserService[F[_]: Sync](
     userRepo: UserRepo[F],
     repositoryService: RepositoryService[F]
-  ) extends BaseService[F, UserId, UserNode[F], User](userRepo) {
+  ) extends PaginationService[F, UserId, UserNode[F], User](userRepo) {
 
-    // TODO move repositoryService.findRepositoryConnection in SchemaF
     override protected val toNode: User => UserNode[F] =
-      user => (user, repositoryService.findRepositoryConnection(Some(user.id))).encodeFrom[UserNode[F]]
+      model =>
+        (model, repositoryService.findByName, repositoryService.findRepositories(model.id.some))
+          .encodeFrom[UserNode[F]]
 
-    def findByName(name: NonEmptyString): F[Option[UserNode[F]]] =
-      userRepo.findByName(name).nested.map(toNode).value
+    def findByName: UserArg => F[Option[UserNode[F]]] =
+      userArg => userRepo.findByName(userArg.name).nested.map(toNode).value
+
+    def findUsers: UsersArg => F[Connection[F, UserNode[F]]] =
+      findConnection(userRepo.find, userRepo.count)
   }
 
   /**
@@ -111,23 +115,19 @@ object services {
   ) extends PaginationService[F, RepositoryId, RepositoryNode[F], Repository](repositoryRepo) {
 
     override protected val toNode: Repository => RepositoryNode[F] =
-      _.encodeFrom[RepositoryNode[F]]
+      model =>
+        (model, issueService.findByNumber, issueService.findIssues(model.id.some))
+          .encodeFrom[RepositoryNode[F]]
 
-    override protected val toEdge: Repository => RowNumber => Edge[F, RepositoryNode[F]] =
-      repository => rowNumber => (repository -> rowNumber).encodeFrom[Edge[F, RepositoryNode[F]]]
+    def findByName: RepositoryArg => F[Option[RepositoryNode[F]]] =
+      repositoryArg => repositoryRepo.findByName(repositoryArg.name).nested.map(toNode).value
 
-    def findByName(name: NonEmptyString): F[Option[RepositoryNode[F]]] =
-      repositoryRepo.findByName(name).nested.map(toNode).value
-
-    def findRepositoryConnection(
+    def findRepositories(
       maybeUserId: Option[UserId]
     ): RepositoriesArg => F[Connection[F, RepositoryNode[F]]] = {
       val findItems: (Limit, Option[RowNumber]) => F[List[(Repository, RowNumber)]] =
-        (limit, rowNumber) =>
-          maybeUserId.fold(repositoryRepo.find(limit, rowNumber))(
-            repositoryRepo.findByUserId(limit, rowNumber)
-          )
-      val countItems: F[NonNegLong] =
+        maybeUserId.fold(repositoryRepo.find)(repositoryRepo.findByUserId)
+      val countItems: F[Count] =
         maybeUserId.fold(repositoryRepo.count)(repositoryRepo.countByUserId)
 
       findConnection(findItems, countItems)
@@ -140,8 +140,23 @@ object services {
   sealed abstract class IssueService[F[_]: Sync](
     issueRepo: IssueRepo[F]
   ) extends PaginationService[F, IssueId, IssueNode[F], Issue](issueRepo) {
-    override protected def toEdge: Issue => RowNumber => Edge[F, IssueNode[F]] = ???
-    override protected def toNode: Issue => IssueNode[F]                       = ???
+
+    override protected def toNode: Issue => IssueNode[F] =
+      _.encodeFrom[IssueNode[F]]
+
+    def findByNumber: IssueArg => F[Option[IssueNode[F]]] =
+      issuerArg => issueRepo.findByNumber(issuerArg.number).nested.map(toNode).value
+
+    def findIssues(
+      maybeRepositoryId: Option[RepositoryId]
+    ): IssuesArg => F[Connection[F, IssueNode[F]]] = {
+      val findItems: (Limit, Option[RowNumber]) => F[List[(Issue, RowNumber)]] =
+        maybeRepositoryId.fold(issueRepo.find)(issueRepo.findByRepositoryId)
+      val countItems: F[Count] =
+        maybeRepositoryId.fold(issueRepo.count)(issueRepo.countByRepositoryId)
+
+      findConnection(findItems, countItems)
+    }
   }
 
   /**
@@ -153,19 +168,23 @@ object services {
     issueService: IssueService[F]
   )(implicit F: Sync[F]) {
 
-    // TODO create specific error + log WARN
-    private[this] def recoverInvalidNode[T <: Node[F]]: PartialFunction[Throwable, Option[T]] = {
+    // TODO handle specific error + log WARN
+    private[this] def ignoreInvalidNode[T <: Node[F]]: PartialFunction[Throwable, Option[T]] = {
       case _: IllegalArgumentException => None
     }
 
-    def findNode(id: NodeId): F[Option[Node[F]]] =
+    private[this] def findNode(id: NodeId): F[Option[Node[F]]] =
       for {
-        userNode       <- userService.findNode(id).recover(recoverInvalidNode[UserNode[F]])
-        repositoryNode <- repositoryService.findNode(id).recover(recoverInvalidNode[RepositoryNode[F]])
-      } yield List(userNode, repositoryNode).collectFirstSomeM(List(_)).head
+        userNode       <- userService.findNode(id).recover(ignoreInvalidNode)
+        repositoryNode <- repositoryService.findNode(id).recover(ignoreInvalidNode)
+        issueNode      <- issueService.findNode(id).recover(ignoreInvalidNode)
+      } yield List(userNode, repositoryNode, issueNode).collectFirstSomeM(List(_)).head
 
-    def findNodes(ids: List[NodeId]): F[List[Option[Node[F]]]] =
-      F.pure(ids).flatMap(_.traverse(id => findNode(id)))
+    def findNode: NodeArg => F[Option[Node[F]]] =
+      nodeArg => findNode(nodeArg.id)
+
+    def findNodes: NodesArg => F[List[Option[Node[F]]]] =
+      nodesArg => F.pure(nodesArg.ids).flatMap(_.traverse(findNode))
   }
 
   /**

@@ -10,32 +10,32 @@ object resolvers {
   import caliban.filter.schemas._
   import caliban.refined._
 
+  private[this] object NodeQuery {
+    def resolver[F[_]: Effect](services: Services[F]): NodeRoot[F] =
+      NodeRoot(
+        node = services.nodeService.findNode,
+        nodes = services.nodeService.findNodes
+      )
+  }
   object NodeRootResolver {
-    object NodeQueries {
-      private[resolvers] def resolver[F[_]: Effect](services: Services[F]): NodeRoot[F] =
-        NodeRoot(
-          node = nodeArg => services.nodeService.findNode(nodeArg.id),
-          nodes = nodesArg => services.nodeService.findNodes(nodesArg.ids)
-        )
-    }
     def api[F[_]: Effect](services: Services[F]): GraphQL[Any] =
-      GraphQL.graphQL(RootResolver(NodeQueries.resolver[F](services)))
+      GraphQL.graphQL(RootResolver(NodeQuery.resolver[F](services)))
   }
 
+  private[this] object GitHubQuery {
+    def resolver[F[_]: Effect](services: Services[F]): GitHubRoot[F] =
+      GitHubRoot(
+        user = services.userService.findByName,
+        users = services.userService.findUsers,
+        repository = services.repositoryService.findByName,
+        repositories = services.repositoryService.findRepositories(None),
+        issue = services.issueService.findByNumber,
+        issues = services.issueService.findIssues(None)
+      )
+  }
   object GitHubRootResolver {
-    object GitHubQueries {
-      private[resolvers] def resolver[F[_]: Effect](services: Services[F]): GitHubRoot[F] =
-        GitHubRoot(
-          user = userArg => services.userService.findByName(userArg.name),
-          users = services.userService.findUserConnection,
-          repository = repositoryArg => services.repositoryService.findByName(repositoryArg.name),
-          repositories = services.repositoryService.findRepositoryConnection(None),
-          issue = issueArg => services.issueService.findByNumber(issueArg.number),
-          issues = services.issueService.findIssueConnection(None)
-        )
-    }
     def api[F[_]: Effect](services: Services[F]): GraphQL[Any] =
-      GraphQL.graphQL(RootResolver(GitHubQueries.resolver[F](services)))
+      GraphQL.graphQL(RootResolver(GitHubQuery.resolver[F](services)))
   }
 
   /**

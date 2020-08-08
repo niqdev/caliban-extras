@@ -50,7 +50,11 @@ object codecs {
     implicit def userSchemaEncoder[F[_]](
       implicit idSchemaEncoder: SchemaEncoder[UserId, NodeId]
     ): SchemaEncoder[
-      (User, RepositoryArg => F[RepositoryNode[F]], RepositoriesArg => F[Connection[F, RepositoryNode[F]]]),
+      (
+        User,
+        RepositoryArg => F[Option[RepositoryNode[F]]],
+        RepositoriesArg => F[Connection[F, RepositoryNode[F]]]
+      ),
       UserNode[F]
     ] = {
       case (model, getRepositoryF, getRepositoriesF) =>
@@ -67,7 +71,11 @@ object codecs {
     implicit def repositorySchemaEncoder[F[_]](
       implicit idSchemaEncoder: SchemaEncoder[RepositoryId, NodeId]
     ): SchemaEncoder[
-      (Repository, IssueArg => F[IssueNode[F]], IssuesArg => F[Connection[F, IssueNode[F]]]),
+      (
+        Repository,
+        IssueArg => F[Option[IssueNode[F]]],
+        IssuesArg => F[Connection[F, IssueNode[F]]]
+      ),
       RepositoryNode[F]
     ] = {
       case (model, getIssueF, getIssuesF) =>

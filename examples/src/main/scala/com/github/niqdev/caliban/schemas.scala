@@ -115,7 +115,7 @@ object schemas {
     name: NonEmptyString,
     createdAt: Instant,
     updatedAt: Instant,
-    repository: RepositoryArg => F[RepositoryNode[F]],
+    repository: RepositoryArg => F[Option[RepositoryNode[F]]],
     repositories: RepositoriesArg => F[Connection[F, RepositoryNode[F]]]
   ) extends Node[F]
   object UserNode {
@@ -130,7 +130,7 @@ object schemas {
     isFork: Boolean,
     createdAt: Instant,
     updatedAt: Instant,
-    issue: IssueArg => F[IssueNode[F]],
+    issue: IssueArg => F[Option[IssueNode[F]]],
     issues: IssuesArg => F[Connection[F, IssueNode[F]]]
   ) extends Node[F]
   object RepositoryNode {
