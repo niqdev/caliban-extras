@@ -13,7 +13,7 @@ import eu.timepit.refined.types.numeric.PosLong
 object codecs {
 
   /**
-    * Encodes a model into a GraphQL schema
+    * Encodes a model M into a GraphQL schema S
     */
   trait SchemaEncoder[M, S] {
     def from(model: M): S
@@ -122,13 +122,16 @@ object codecs {
     }
   }
 
+  /**
+    * Schema Encoder syntax
+    */
   final class SchemaEncoderOps[M](private val model: M) extends AnyVal {
-    def encodeFrom[S](implicit schemaEncoder: SchemaEncoder[M, S]): S =
+    def encode[S](implicit schemaEncoder: SchemaEncoder[M, S]): S =
       schemaEncoder.from(model)
   }
 
   /**
-    * Decodes a GraphQL schema into a model
+    * Decodes a GraphQL schema S into a model M
     */
   trait SchemaDecoder[S, M] {
     def to(schema: S): Either[Throwable, M]
@@ -166,5 +169,13 @@ object codecs {
       implicit schemaDecoder: SchemaDecoder[S, M]
     ): SchemaDecoder[Option[S], Option[M]] =
       maybeSchema => maybeSchema.fold(Option.empty[M])(i => schemaDecoder.to(i).toOption).asRight[Throwable]
+  }
+
+  /**
+    * Schema Decoder syntax
+    */
+  final class SchemaDecoderOps[S](private val schema: S) extends AnyVal {
+    def decode[M](implicit schemaDecoder: SchemaDecoder[S, M]): Either[Throwable, M] =
+      schemaDecoder.to(schema)
   }
 }

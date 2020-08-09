@@ -10,6 +10,9 @@ object resolvers {
   import caliban.filter.schemas._
   import caliban.refined._
 
+  /**
+    * Node resolver
+    */
   private[this] object NodeQuery {
     def resolver[F[_]: Effect](services: Services[F]): NodeRoot[F] =
       NodeRoot(
@@ -22,6 +25,9 @@ object resolvers {
       GraphQL.graphQL(RootResolver(NodeQuery.resolver[F](services)))
   }
 
+  /**
+    * GitHub resolver
+    */
   private[this] object GitHubQuery {
     def resolver[F[_]: Effect](services: Services[F]): GitHubRoot[F] =
       GitHubRoot(

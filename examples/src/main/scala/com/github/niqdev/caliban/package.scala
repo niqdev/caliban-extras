@@ -1,10 +1,12 @@
 package com.github.niqdev
 
-import com.github.niqdev.caliban.codecs.SchemaEncoderOps
+import com.github.niqdev.caliban.codecs.{ SchemaDecoderOps, SchemaEncoderOps }
 
 package object caliban {
 
-  // TODO add constraint on M
   final implicit def schemaEncoderSyntax[M](model: M): SchemaEncoderOps[M] =
     new SchemaEncoderOps[M](model)
+
+  final implicit def schemaDecoderSyntax[S](schema: S): SchemaDecoderOps[S] =
+    new SchemaDecoderOps[S](schema)
 }
