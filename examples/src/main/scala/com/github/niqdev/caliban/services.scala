@@ -19,39 +19,28 @@ import com.github.niqdev.caliban.schemas._
 @scala.annotation.nowarn
 object services {
 
-  // TODO improve types Effect | Id | Node (schema) | Model
-  sealed abstract class BaseService[F[_], I, N <: Node[F], M](
-    repository: BaseRepository[F, I, M]
-  )(
-    implicit F: Sync[F],
-    idSchemaDecoder: SchemaDecoder[NodeId, I]
+  // TODO uniform SchemaEncoder/SchemaDecoder syntax
+  sealed abstract class PaginationService[F[_], M, N <: Node[F]](
+    implicit F: Sync[F]
   ) {
-    // TODO implement for all
-    // from model to schema (node)
-    protected def toNode: M => N
 
-    def findNode(id: NodeId): F[Option[N]] =
+    protected def findNodeById[I](findF: I => F[Option[M]])(id: NodeId)(
+      implicit idSchemaDecoder: SchemaDecoder[NodeId, I],
+      nodeSchemaEncoder: SchemaEncoder[M, N]
+    ): F[Option[N]] =
       F.fromEither(idSchemaDecoder.to(id))
-        .flatMap(repository.findById)
+        .flatMap(findF)
         .nested
-        .map(toNode)
+        .map(nodeSchemaEncoder.from)
         .value
-  }
-
-  sealed abstract class PaginationService[F[_], I, N <: Node[F], M](
-    repository: BaseRepository[F, I, M]
-  )(
-    implicit F: Sync[F],
-    idSchemaDecoder: SchemaDecoder[NodeId, I],
-    nodeSchemaEncoder: SchemaEncoder[M, N]
-  ) extends BaseService[F, I, N, M](repository) {
-
-    protected def toEdge: M => RowNumber => Edge[F, N] =
-      model => rowNumber => SchemaEncoder[(M, RowNumber), Edge[F, N]].from(model -> rowNumber)
 
     protected def findConnection(
       findItems: (Limit, Option[RowNumber]) => F[List[(M, RowNumber)]],
       countItems: => F[Count]
+    )(
+      implicit firstSchemaDecoder: SchemaDecoder[First, Limit],
+      maybeCursorSchemaDecoder: SchemaDecoder[Option[Cursor], Option[RowNumber]],
+      nodeSchemaEncoder: SchemaEncoder[M, N]
     ): ForwardPaginationArg => F[Connection[F, N]] =
       paginationArg => {
 
@@ -63,22 +52,20 @@ object services {
           else items
 
         for {
-          limit <- F.fromEither(SchemaDecoder[First, Limit].to(paginationArg.first))
+          limit <- F.fromEither(firstSchemaDecoder.to(paginationArg.first))
           limitPlusOne = Limit.inc(limit)
-          nextRowNumber <- F.fromEither(
-            SchemaDecoder[Option[Cursor], Option[RowNumber]].to(paginationArg.after)
-          )
+          nextRowNumber <- F.fromEither(maybeCursorSchemaDecoder.to(paginationArg.after))
           // fetch N+1 items to efficiently verify hasNextPage
           itemsPlusOne <- findItems(limitPlusOne, nextRowNumber)
           items = dropLastItem(itemsPlusOne, limitPlusOne)
-          edges <- F.pure(items).nested.map(repository => toEdge(repository._1)(repository._2)).value
-          nodes <- F.pure(items).nested.map(repository => toNode(repository._1)).value
+          edges <- F.pure(items).nested.map(_.encodeFrom[Edge[F, N]]).value
+          nodes <- F.pure(items.map(_._1)).nested.map(_.encodeFrom[N]).value
           pageInfo <- F.pure {
             PageInfo(
-              isFullSize(itemsPlusOne, limitPlusOne),
-              false, // default false
-              items.head._2.encodeFrom[Cursor],
-              items.last._2.encodeFrom[Cursor]
+              hasNextPage = isFullSize(itemsPlusOne, limitPlusOne),
+              hasPreviousPage = false, // default false
+              startCursor = items.head._2.encodeFrom[Cursor],
+              endCursor = items.last._2.encodeFrom[Cursor]
             )
           }
           totalCount <- countItems.map(_.value)
@@ -92,15 +79,18 @@ object services {
   sealed abstract class UserService[F[_]: Sync](
     userRepo: UserRepo[F],
     repositoryService: RepositoryService[F]
-  ) extends PaginationService[F, UserId, UserNode[F], User](userRepo) {
+  ) extends PaginationService[F, User, UserNode[F]] {
 
-    override protected val toNode: User => UserNode[F] =
-      model =>
-        (model, repositoryService.findByName, repositoryService.findRepositories(model.id.some))
+    private[this] implicit val nodeSchemaEncoder: SchemaEncoder[User, UserNode[F]] =
+      user =>
+        (user, repositoryService.findByName, repositoryService.findRepositories(user.id.some))
           .encodeFrom[UserNode[F]]
 
+    def findNode: NodeId => F[Option[UserNode[F]]] =
+      findNodeById[UserId](userRepo.findById)
+
     def findByName: UserArg => F[Option[UserNode[F]]] =
-      userArg => userRepo.findByName(userArg.name).nested.map(toNode).value
+      userArg => userRepo.findByName(userArg.name).nested.map(nodeSchemaEncoder.from).value
 
     def findUsers: UsersArg => F[Connection[F, UserNode[F]]] =
       findConnection(userRepo.find, userRepo.count)
@@ -112,15 +102,18 @@ object services {
   sealed abstract class RepositoryService[F[_]: Sync](
     repositoryRepo: RepositoryRepo[F],
     issueService: IssueService[F]
-  ) extends PaginationService[F, RepositoryId, RepositoryNode[F], Repository](repositoryRepo) {
+  ) extends PaginationService[F, Repository, RepositoryNode[F]] {
 
-    override protected val toNode: Repository => RepositoryNode[F] =
-      model =>
-        (model, issueService.findByNumber, issueService.findIssues(model.id.some))
+    private[this] implicit val nodeSchemaEncoder: SchemaEncoder[Repository, RepositoryNode[F]] =
+      repository =>
+        (repository, issueService.findByNumber, issueService.findIssues(repository.id.some))
           .encodeFrom[RepositoryNode[F]]
 
+    def findNode: NodeId => F[Option[RepositoryNode[F]]] =
+      findNodeById[RepositoryId](repositoryRepo.findById)
+
     def findByName: RepositoryArg => F[Option[RepositoryNode[F]]] =
-      repositoryArg => repositoryRepo.findByName(repositoryArg.name).nested.map(toNode).value
+      repositoryArg => repositoryRepo.findByName(repositoryArg.name).nested.map(nodeSchemaEncoder.from).value
 
     def findRepositories(
       maybeUserId: Option[UserId]
@@ -139,13 +132,13 @@ object services {
     */
   sealed abstract class IssueService[F[_]: Sync](
     issueRepo: IssueRepo[F]
-  ) extends PaginationService[F, IssueId, IssueNode[F], Issue](issueRepo) {
+  ) extends PaginationService[F, Issue, IssueNode[F]] {
 
-    override protected def toNode: Issue => IssueNode[F] =
-      _.encodeFrom[IssueNode[F]]
+    def findNode: NodeId => F[Option[IssueNode[F]]] =
+      findNodeById[IssueId](issueRepo.findById)
 
     def findByNumber: IssueArg => F[Option[IssueNode[F]]] =
-      issuerArg => issueRepo.findByNumber(issuerArg.number).nested.map(toNode).value
+      issuerArg => issueRepo.findByNumber(issuerArg.number).nested.map(_.encodeFrom[IssueNode[F]]).value
 
     def findIssues(
       maybeRepositoryId: Option[RepositoryId]

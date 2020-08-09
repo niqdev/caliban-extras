@@ -37,17 +37,12 @@ object repositories {
       Limit(NonNegInt.unsafeFrom(limit.value.value + 1))
   }
 
-  trait BaseRepository[F[_], I, M] {
-    def findById(id: I): F[Option[M]]
-    def count: F[Count]
-  }
-
   /**
     * User repository
     */
-  sealed abstract class UserRepo[F[_]: Sync](xa: Transactor[F]) extends BaseRepository[F, UserId, User] {
+  sealed abstract class UserRepo[F[_]: Sync](xa: Transactor[F]) {
 
-    override def findById(id: UserId): F[Option[User]] =
+    def findById(id: UserId): F[Option[User]] =
       UserRepo.queries.findById(id).query[User].option.transact(xa)
 
     def findByName(name: NonEmptyString): F[Option[User]] =
@@ -55,7 +50,7 @@ object repositories {
 
     def find(limit: Limit, nextRowNumber: Option[RowNumber]): F[List[(User, RowNumber)]] = ???
 
-    override def count: F[Count] =
+    def count: F[Count] =
       UserRepo.queries.count.query[Count].unique.transact(xa)
   }
   object UserRepo {
@@ -84,10 +79,9 @@ object repositories {
   /**
     * Repository repository
     */
-  sealed abstract class RepositoryRepo[F[_]: Sync](xa: Transactor[F])
-      extends BaseRepository[F, RepositoryId, Repository] {
+  sealed abstract class RepositoryRepo[F[_]: Sync](xa: Transactor[F]) {
 
-    override def findById(id: RepositoryId): F[Option[Repository]] =
+    def findById(id: RepositoryId): F[Option[Repository]] =
       RepositoryRepo.queries.findById(id).query[Repository].option.transact(xa)
 
     def findByName(name: NonEmptyString): F[Option[Repository]] =
@@ -111,7 +105,7 @@ object repositories {
           .to[List]
           .transact(xa)
 
-    override def count: F[Count] =
+    def count: F[Count] =
       RepositoryRepo.queries.count.query[Count].unique.transact(xa)
 
     def countByUserId(userId: UserId): F[Count] =
@@ -176,9 +170,9 @@ object repositories {
   /**
     * Issue repository
     */
-  sealed abstract class IssueRepo[F[_]: Sync](xa: Transactor[F]) extends BaseRepository[F, IssueId, Issue] {
+  sealed abstract class IssueRepo[F[_]: Sync](xa: Transactor[F]) {
 
-    override def findById(id: IssueId): F[Option[Issue]] =
+    def findById(id: IssueId): F[Option[Issue]] =
       IssueRepo.queries.findById(id).query[Issue].option.transact(xa)
 
     def findByNumber(number: PosInt): F[Option[Issue]] =
@@ -190,7 +184,7 @@ object repositories {
       repositoryId: RepositoryId
     ): (Limit, Option[RowNumber]) => F[List[(Issue, RowNumber)]] = ???
 
-    override def count: F[Count] =
+    def count: F[Count] =
       IssueRepo.queries.count.query[Count].unique.transact(xa)
 
     def countByRepositoryId(repositoryId: RepositoryId): F[Count] = ???

@@ -9,7 +9,7 @@ import com.github.niqdev.caliban.repositories._
 import com.github.niqdev.caliban.schemas._
 import eu.timepit.refined.types.numeric.PosLong
 
-// TODO use magnolia for typeclass derivation
+// TODO derive typeclasses with magnolia
 object codecs {
 
   /**
@@ -57,14 +57,14 @@ object codecs {
       ),
       UserNode[F]
     ] = {
-      case (model, getRepositoryF, getRepositoriesF) =>
+      case (model, repositoryF, repositoriesF) =>
         UserNode(
           id = idSchemaEncoder.from(model.id),
           name = model.name.value,
           createdAt = model.createdAt,
           updatedAt = model.updatedAt,
-          repository = getRepositoryF,
-          repositories = getRepositoriesF
+          repository = repositoryF,
+          repositories = repositoriesF
         )
     }
 
@@ -78,7 +78,7 @@ object codecs {
       ),
       RepositoryNode[F]
     ] = {
-      case (model, getIssueF, getIssuesF) =>
+      case (model, issueF, issuesF) =>
         RepositoryNode(
           id = idSchemaEncoder.from(model.id),
           name = model.name.value,
@@ -86,8 +86,8 @@ object codecs {
           isFork = model.isFork,
           createdAt = model.createdAt,
           updatedAt = model.updatedAt,
-          issue = getIssueF,
-          issues = getIssuesF
+          issue = issueF,
+          issues = issuesF
         )
     }
 
