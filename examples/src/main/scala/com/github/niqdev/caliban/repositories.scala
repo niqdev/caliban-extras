@@ -11,8 +11,6 @@ import eu.timepit.refined.types.string.NonEmptyString
 import io.estatico.newtype.Coercible
 import io.estatico.newtype.macros.newtype
 
-// TODO remove annotation
-@scala.annotation.nowarn
 object repositories {
 
   import doobie.implicits.legacy.instant.JavaTimeInstantMeta
@@ -48,7 +46,14 @@ object repositories {
     def findByName(name: NonEmptyString): F[Option[User]] =
       UserRepo.queries.findByName(name).query[User].option.transact(xa)
 
-    def find(limit: Limit, nextRowNumber: Option[RowNumber]): F[List[(User, RowNumber)]] = ???
+    val find: (Limit, Option[RowNumber]) => F[List[(User, RowNumber)]] =
+      (limit, nextRowNumber) =>
+        UserRepo
+          .queries
+          .find(limit, nextRowNumber)
+          .query[(User, RowNumber)]
+          .to[List]
+          .transact(xa)
 
     def count: F[Count] =
       UserRepo.queries.count.query[Count].unique.transact(xa)
@@ -57,22 +62,24 @@ object repositories {
     def apply[F[_]: Sync](xa: Transactor[F]): UserRepo[F] =
       new UserRepo[F](xa) {}
 
-    private[UserRepo] object queries {
+    private[UserRepo] object queries extends CommonQueries {
       private[this] val schemaName = "example"
       private[this] val tableName  = "user"
-      private[this] val tableFrom  = Fragment.const(s" FROM $schemaName.$tableName ")
 
-      private[this] lazy val findAll: Fragment =
-        fr"SELECT id, name, created_at, updated_at" ++ tableFrom
+      override def fromTable: Fragment =
+        Fragment.const(s" FROM $schemaName.$tableName ")
+
+      override def columns: Fragment =
+        fr" id, name, created_at, updated_at "
+
+      override def orderBy: Fragment =
+        fr" ORDER BY updated_at "
 
       lazy val findById: UserId => Fragment =
-        id => findAll ++ fr"WHERE id = $id"
+        id => findAll(where = fr" WHERE id = $id ")
 
       lazy val findByName: NonEmptyString => Fragment =
-        name => findAll ++ fr"WHERE name = $name"
-
-      lazy val count: Fragment =
-        fr"SELECT COUNT(*)" ++ tableFrom
+        name => findAll(where = fr" WHERE name = $name ")
     }
   }
 
@@ -111,59 +118,36 @@ object repositories {
     def countByUserId(userId: UserId): F[Count] =
       RepositoryRepo.queries.countByUserId(userId).query[Count].unique.transact(xa)
   }
+
   object RepositoryRepo {
     def apply[F[_]: Sync](xa: Transactor[F]): RepositoryRepo[F] =
       new RepositoryRepo[F](xa) {}
 
-    // TODO orderBy: default updated_at
-    private[RepositoryRepo] object queries {
+    private[RepositoryRepo] object queries extends CommonQueries {
       private[this] val schemaName = "example"
       private[this] val tableName  = "repository"
-      private[this] val tableFrom  = Fragment.const(s" FROM $schemaName.$tableName ")
-      private[this] val columns    = Fragment.const(s"id, user_id, name, url, is_fork, created_at, updated_at")
-      private[this] val nop        = fr""
 
-      @scala.annotation.nowarn
-      private[this] def findAll(
-        extraColumns: Option[Fragment] = None,
-        where: Option[Fragment] = None
-      ): Fragment =
-        fr"SELECT " ++ columns ++ extraColumns.getOrElse(nop) ++
-          tableFrom ++ where.getOrElse(nop) ++ fr" ORDER BY updated_at"
+      override def fromTable: Fragment =
+        Fragment.const(s" FROM $schemaName.$tableName ")
 
-      private[this] def find(
-        limit: Limit,
-        nextRowNumber: Option[RowNumber],
-        where: Option[Fragment]
-      ): Fragment = {
-        val rowNumberColumn     = Fragment.const(s", ROW_NUMBER() OVER (ORDER BY updated_at) AS row_number")
-        val findLimit: Fragment = findAll(Some(rowNumberColumn), where) ++ fr" LIMIT $limit"
-        val findLimitAfterRowNumber: RowNumber => Fragment = rowNumber =>
-          fr"SELECT * FROM (" ++ findAll(
-            Some(rowNumberColumn),
-            where
-          ) ++ fr") t WHERE t.row_number > $rowNumber" ++ fr" LIMIT $limit"
+      override def columns: Fragment =
+        fr" id, user_id, name, url, is_fork, created_at, updated_at "
 
-        nextRowNumber.fold(findLimit)(findLimitAfterRowNumber)
-      }
-
-      def find(limit: Limit, nextRowNumber: Option[RowNumber]): Fragment =
-        find(limit, nextRowNumber, None)
-
-      def findByUserId(limit: Limit, nextRowNumber: Option[RowNumber]): UserId => Fragment =
-        userId => find(limit, nextRowNumber, Some(fr"WHERE user_id = $userId"))
+      override def orderBy: Fragment =
+        fr" ORDER BY updated_at "
 
       lazy val findById: RepositoryId => Fragment =
-        id => findAll(where = Some(fr"WHERE id = $id"))
+        id => findAll(where = fr" WHERE id = $id ")
 
       lazy val findByName: NonEmptyString => Fragment =
-        name => findAll(where = Some(fr"WHERE name = $name"))
+        name => findAll(where = fr" WHERE name = $name ")
 
-      lazy val count: Fragment =
-        fr"SELECT COUNT(*)" ++ tableFrom
+      // TODO orderBy
+      def findByUserId(limit: Limit, nextRowNumber: Option[RowNumber]): UserId => Fragment =
+        userId => find(Some(fr" WHERE user_id = $userId "), None, limit, nextRowNumber)
 
       lazy val countByUserId: UserId => Fragment =
-        userId => fr"SELECT COUNT(*)" ++ tableFrom ++ fr"WHERE user_id = $userId"
+        userId => fr"SELECT COUNT(*)" ++ fromTable ++ fr"WHERE user_id = $userId"
     }
   }
 
@@ -178,38 +162,141 @@ object repositories {
     def findByNumber(number: PosInt): F[Option[Issue]] =
       IssueRepo.queries.findByNumber(number).query[Issue].option.transact(xa)
 
-    val find: (Limit, Option[RowNumber]) => F[List[(Issue, RowNumber)]] = ???
+    val find: (Limit, Option[RowNumber]) => F[List[(Issue, RowNumber)]] =
+      (limit, nextRowNumber) =>
+        IssueRepo
+          .queries
+          .find(limit, nextRowNumber)
+          .query[(Issue, RowNumber)]
+          .to[List]
+          .transact(xa)
 
     def findByRepositoryId(
       repositoryId: RepositoryId
-    ): (Limit, Option[RowNumber]) => F[List[(Issue, RowNumber)]] = ???
+    ): (Limit, Option[RowNumber]) => F[List[(Issue, RowNumber)]] =
+      (limit, nextRowNumber) =>
+        IssueRepo
+          .queries
+          .findByRepositoryId(limit, nextRowNumber)(repositoryId)
+          .query[(Issue, RowNumber)]
+          .to[List]
+          .transact(xa)
 
     def count: F[Count] =
       IssueRepo.queries.count.query[Count].unique.transact(xa)
 
-    def countByRepositoryId(repositoryId: RepositoryId): F[Count] = ???
+    def countByRepositoryId(repositoryId: RepositoryId): F[Count] =
+      IssueRepo.queries.countByRepositoryId(repositoryId).query[Count].unique.transact(xa)
   }
   object IssueRepo {
     def apply[F[_]: Sync](xa: Transactor[F]): IssueRepo[F] =
       new IssueRepo[F](xa) {}
 
-    private[IssueRepo] object queries {
+    private[IssueRepo] object queries extends CommonQueries {
       private[this] val schemaName = "example"
       private[this] val tableName  = "issue"
-      private[this] val tableFrom  = Fragment.const(s" FROM $schemaName.$tableName ")
 
-      private[this] lazy val findAll: Fragment =
-        fr"SELECT id, repository_id, number, status, title, body, created_at, updated_at" ++ tableFrom
+      override def fromTable: Fragment =
+        Fragment.const(s" FROM $schemaName.$tableName ")
+
+      override def columns: Fragment =
+        fr" id, repository_id, number, status, title, body, created_at, updated_at "
+
+      override def orderBy: Fragment =
+        fr" ORDER BY updated_at "
 
       lazy val findById: IssueId => Fragment =
-        id => findAll ++ fr"WHERE id = $id"
+        id => findAll(where = fr" WHERE id = $id ")
 
       lazy val findByNumber: PosInt => Fragment =
-        number => findAll ++ fr"WHERE number = $number"
+        number => findAll(where = fr" WHERE number = $number ")
 
-      lazy val count: Fragment =
-        fr"SELECT COUNT(*)" ++ tableFrom
+      // TODO orderBy
+      def findByRepositoryId(limit: Limit, nextRowNumber: Option[RowNumber]): RepositoryId => Fragment =
+        repositoryId => find(Some(fr" WHERE repository_id = $repositoryId "), None, limit, nextRowNumber)
+
+      lazy val countByRepositoryId: RepositoryId => Fragment =
+        repositoryId => fr"SELECT COUNT(*)" ++ fromTable ++ fr"WHERE repository_id = $repositoryId"
     }
+  }
+
+  trait CommonQueries {
+
+    def fromTable: Fragment
+    def columns: Fragment
+    def orderBy: Fragment
+
+    private[this] val nop = fr""
+
+    @scala.annotation.nowarn
+    private[this] def select(
+      columns: Fragment,
+      fromTable: Fragment,
+      maybeWhere: Option[Fragment] = None,
+      maybeExtraColumns: Option[Fragment] = None,
+      maybeOrderBy: Option[Fragment] = None,
+      maybeLimit: Option[Fragment] = None
+    ): Fragment =
+      fr"SELECT " ++ columns ++ maybeExtraColumns.getOrElse(nop) ++
+        fromTable ++
+        maybeWhere.getOrElse(nop) ++
+        maybeOrderBy.getOrElse(nop) ++
+        maybeLimit.getOrElse(nop)
+
+    private[this] def selectRows(
+      columns: Fragment,
+      fromTable: Fragment,
+      maybeWhere: Option[Fragment],
+      orderBy: Fragment,
+      limit: Fragment,
+      nextRowNumber: Option[RowNumber]
+    ): Fragment = {
+
+      val rowNumberColumn = fr", ROW_NUMBER() OVER (" ++ orderBy ++ fr") AS row_number "
+      val selectLimit: Fragment =
+        select(columns, fromTable, maybeWhere, Some(rowNumberColumn), Some(orderBy), Some(limit))
+      val selectLimitAfterRowNumber: RowNumber => Fragment = rowNumber =>
+        fr"SELECT * FROM (" ++
+          select(columns, fromTable, maybeWhere, Some(rowNumberColumn), Some(orderBy), None) ++
+          fr") t WHERE t.row_number > $rowNumber" ++ limit
+
+      nextRowNumber.fold(selectLimit)(selectLimitAfterRowNumber)
+    }
+
+    def findAll(
+      where: Fragment,
+      maybeOrderBy: Option[Fragment] = None
+    ): Fragment =
+      select(
+        columns,
+        fromTable,
+        Some(where),
+        None,
+        maybeOrderBy.orElse(Some(orderBy)),
+        None
+      )
+
+    def find(
+      maybeWhere: Option[Fragment],
+      maybeOrderBy: Option[Fragment],
+      limit: Limit,
+      nextRowNumber: Option[RowNumber]
+    ): Fragment =
+      selectRows(
+        columns,
+        fromTable,
+        maybeWhere,
+        maybeOrderBy.getOrElse(orderBy),
+        fr" LIMIT $limit ",
+        nextRowNumber
+      )
+
+    // TODO orderBy
+    def find(limit: Limit, nextRowNumber: Option[RowNumber]): Fragment =
+      find(None, None, limit, nextRowNumber)
+
+    def count: Fragment =
+      fr"SELECT COUNT(*)" ++ fromTable
   }
 
   /**
