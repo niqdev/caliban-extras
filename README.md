@@ -7,9 +7,9 @@
     - query `issue` and `issues`
 * [x] abstract node
 * [x] abstract pagination (relay spec)
-* [ ] abstract filter (drupal spec with droste) [example](https://github.com/niqdev/scala-fp/pull/96)
+* [ ] abstract filters (drupal spec with droste) [example](https://github.com/niqdev/scala-fp/pull/96)
 * [ ] pagination module - issue with `Node` interface
-* [ ] filter module
+* [ ] filters module
 * [x] refined/newtype module
 * [ ] migrate from cats to zio
 * [ ] mutations
@@ -283,7 +283,7 @@ query findUserPaginated {
 ```
 
 ```graphql
-query byNodeIds {
+query findByNodeIds {
   nodes(
     ids: [
       "dXNlcjp2MTpmMGZiZTEzMS0zZjY1LTQxNDUtYjM3My01YmJmYzFjOWExYWU=",

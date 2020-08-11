@@ -118,7 +118,6 @@ object repositories {
     def countByUserId(userId: UserId): F[Count] =
       RepositoryRepo.queries.countByUserId(userId).query[Count].unique.transact(xa)
   }
-
   object RepositoryRepo {
     def apply[F[_]: Sync](xa: Transactor[F]): RepositoryRepo[F] =
       new RepositoryRepo[F](xa) {}
