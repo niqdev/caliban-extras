@@ -5,7 +5,6 @@ import caliban.{ GraphQL, RootResolver }
 import cats.effect.{ Effect, Resource, Sync }
 import com.github.niqdev.caliban.schemas._
 import com.github.niqdev.caliban.services._
-import log.effect.LogWriter
 
 object resolvers {
   import caliban.interop.cats.implicits._
@@ -49,30 +48,26 @@ object resolvers {
     * Resolvers
     */
   object Resolvers {
-    private[this] def logWrapper[F[_]](implicit logger: LogWriter[F]): OverallWrapper[Any] =
+    private[this] def impureLogWrapper[F[_]]: OverallWrapper[Any] =
       OverallWrapper { process => request =>
         process(request)
           .map { response =>
+            // very very non fp... LogWriter F[Unit] vs putStrLn ZIO[Console] interop ???
             if (response.errors.nonEmpty)
-              logger.error(s"""
-                   |request: $request
-                   |errors: ${response.errors.mkString("\n")}
-                   |""".stripMargin)
-            else
-              logger.debug(s"""
-                   |request: $request
-                   |response: $response
-                   |""".stripMargin)
+              println(s"""
+                         |request: $request
+                         |errors: ${response.errors.mkString("\n")}
+                         |""".stripMargin)
             response
           }
       }
 
-    private[this] def api[F[_]: Effect: LogWriter](services: Services[F]): GraphQL[Any] =
+    private[this] def api[F[_]: Effect](services: Services[F]): GraphQL[Any] =
       NodeRootResolver.api[F](services) |+|
         GitHubRootResolver.api[F](services) @@
-          logWrapper
+          impureLogWrapper
 
-    def make[F[_]: Effect: LogWriter](services: Services[F]) =
+    def make[F[_]: Effect](services: Services[F]) =
       Resource.liftF(Sync[F].delay(api[F](services)))
   }
 }
