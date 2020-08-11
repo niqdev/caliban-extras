@@ -15,7 +15,6 @@ package object pagination {
     """^(?:[A-Za-z0-9+/]{4})*(?:[A-Za-z0-9+/]{2}==|[A-Za-z0-9+/]{3}=|[A-Za-z0-9+/]{4})$"""
   )
   final type Base64String = String Refined MatchesRegex[Base64Regex.T]
-  // TODO move prefix in Schema/ArgBuilder
   final object Base64String extends RefinedTypeOps[Base64String, String] {
 
     /**
