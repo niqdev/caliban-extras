@@ -18,60 +18,6 @@ import com.github.niqdev.caliban.schemas._
 object services {
 
   /**
-    * Pagination service
-    */
-  sealed abstract class PaginationService[F[_], M, N <: Node[F]](implicit F: Sync[F]) {
-
-    // I: schema id
-    protected def findNodeById[I](findM: I => F[Option[M]])(
-      implicit idSchemaDecoder: SchemaDecoder[NodeId, I],
-      nodeSchemaEncoder: SchemaEncoder[M, N]
-    ): NodeId => F[Option[N]] =
-      id =>
-        F.fromEither(id.decode[I])
-          .flatMap(findM)
-          .nested
-          .map(_.encode[N])
-          .value
-
-    protected def findConnection(
-      findItems: (Limit, Option[RowNumber]) => F[List[(M, RowNumber)]],
-      countItems: => F[Count]
-    )(
-      implicit nodeSchemaEncoder: SchemaEncoder[M, N]
-    ): ForwardPaginationArg => F[Connection[F, N]] =
-      paginationArg => {
-
-        def hasSameSize(items: List[(M, RowNumber)], limit: Limit) =
-          items.length == limit.value.value
-
-        def dropLastItem(items: List[(M, RowNumber)], limit: Limit) =
-          if (hasSameSize(items, limit)) items.dropRight(1) else items
-
-        for {
-          limit <- F.fromEither(paginationArg.first.decode[Limit])
-          limitPlusOne = Limit.inc(limit)
-          nextRowNumber <- F.fromEither(paginationArg.after.decode[Option[RowNumber]])
-          // fetch N+1 items to efficiently verify hasNextPage
-          itemsPlusOne <- findItems(limitPlusOne, nextRowNumber)
-          // items size is always <= N: remove the last item if size is N+1
-          items = dropLastItem(itemsPlusOne, limitPlusOne)
-          edges <- F.pure(items).nested.map(_.encode[Edge[F, N]]).value
-          nodes <- F.pure(items.map(_._1)).nested.map(_.encode[N]).value
-          pageInfo <- F.pure {
-            PageInfo(
-              hasNextPage = hasSameSize(itemsPlusOne, limitPlusOne),
-              hasPreviousPage = false, // default false
-              startCursor = items.head._2.encode[Cursor],
-              endCursor = items.last._2.encode[Cursor]
-            )
-          }
-          totalCount <- countItems.map(_.value)
-        } yield Connection(edges, nodes, pageInfo, totalCount)
-      }
-  }
-
-  /**
     * User service
     */
   sealed abstract class UserService[F[_]: Sync](
@@ -151,6 +97,60 @@ object services {
   }
 
   /**
+    * Pagination service
+    */
+  sealed abstract class PaginationService[F[_], M, N <: Node[F]](implicit F: Sync[F]) {
+
+    // I: schema id
+    protected def findNodeById[I](findM: I => F[Option[M]])(
+      implicit idSchemaDecoder: SchemaDecoder[NodeId, I],
+      nodeSchemaEncoder: SchemaEncoder[M, N]
+    ): NodeId => F[Option[N]] =
+      id =>
+        F.fromEither(id.decode[I])
+          .flatMap(findM)
+          .nested
+          .map(_.encode[N])
+          .value
+
+    protected def findConnection(
+      findItems: (Limit, Option[RowNumber]) => F[List[(M, RowNumber)]],
+      countItems: => F[Count]
+    )(
+      implicit nodeSchemaEncoder: SchemaEncoder[M, N]
+    ): ForwardPaginationArg => F[Connection[F, N]] =
+      paginationArg => {
+
+        def hasSameSize(items: List[(M, RowNumber)], limit: Limit) =
+          items.length == limit.value.value
+
+        def dropLastItem(items: List[(M, RowNumber)], limit: Limit) =
+          if (hasSameSize(items, limit)) items.dropRight(1) else items
+
+        for {
+          limit <- F.fromEither(paginationArg.first.decode[Limit])
+          limitPlusOne = Limit.inc(limit)
+          nextRowNumber <- F.fromEither(paginationArg.after.decode[Option[RowNumber]])
+          // fetch N+1 items to efficiently verify hasNextPage
+          itemsPlusOne <- findItems(limitPlusOne, nextRowNumber)
+          // items size is always <= N: remove the last item if size is N+1
+          items = dropLastItem(itemsPlusOne, limitPlusOne)
+          edges <- F.pure(items).nested.map(_.encode[Edge[F, N]]).value
+          nodes <- F.pure(items.map(_._1)).nested.map(_.encode[N]).value
+          pageInfo <- F.pure {
+            PageInfo(
+              hasNextPage = hasSameSize(itemsPlusOne, limitPlusOne),
+              hasPreviousPage = false, // default false
+              startCursor = items.head._2.encode[Cursor],
+              endCursor = items.last._2.encode[Cursor]
+            )
+          }
+          totalCount <- countItems.map(_.value)
+        } yield Connection(edges, nodes, pageInfo, totalCount)
+      }
+  }
+
+  /**
     * Node service
     */
   sealed abstract class NodeService[F[_]](
@@ -201,6 +201,6 @@ object services {
       }
 
     def make[F[_]: Sync](repos: Repositories[F]) =
-      Resource.liftF(Sync[F].pure(apply[F](repos)))
+      Resource.liftF(Sync[F].delay(apply[F](repos)))
   }
 }

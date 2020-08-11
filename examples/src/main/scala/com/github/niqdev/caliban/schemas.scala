@@ -2,16 +2,18 @@ package com.github.niqdev.caliban
 
 import java.time.Instant
 
-import caliban.filter.arguments.{ Filter, FilterArg }
+import caliban.filter.schemas._
 import caliban.pagination.Base64String
 import caliban.schema.Annotations.{ GQLInterface, GQLName }
+import caliban.schema.Schema
+import com.github.niqdev.caliban.schemas._
 import eu.timepit.refined.api.Refined
 import eu.timepit.refined.string.Url
 import eu.timepit.refined.types.numeric.{ NonNegInt, NonNegLong, PosInt }
 import eu.timepit.refined.types.string.NonEmptyString
 import io.estatico.newtype.macros.newtype
 
-object schemas {
+object schemas extends SchemaInstances {
 
   @newtype case class NodeId(value: Base64String)
   @newtype case class Cursor(value: Base64String)
@@ -157,4 +159,34 @@ object schemas {
   object IssueNode {
     val idPrefix = "issue:v1:"
   }
+}
+
+// declare instances to avoid "Method too large" caused by magnolia
+sealed trait SchemaInstances {
+
+  implicit val nodeIdSchema: Schema[Any, NodeId] =
+    Schema.stringSchema.contramap(_.value.value)
+  implicit val cursorSchema: Schema[Any, Cursor] =
+    Schema.stringSchema.contramap(_.value.value)
+  implicit val firstSchema: Schema[Any, First] =
+    Schema.intSchema.contramap(_.value.value)
+  implicit val lastSchema: Schema[Any, Last] =
+    Schema.intSchema.contramap(_.value.value)
+
+  implicit val nodeArgSchema: Schema[Any, NodeArg] =
+    Schema.gen[NodeArg]
+  implicit val nodesArgSchema: Schema[Any, NodesArg] =
+    Schema.gen[NodesArg]
+  implicit val userArgSchema: Schema[Any, UserArg] =
+    Schema.gen[UserArg]
+  implicit val usersArgSchema: Schema[Any, UsersArg] =
+    Schema.gen[UsersArg]
+  implicit val repositoryArgSchema: Schema[Any, RepositoryArg] =
+    Schema.gen[RepositoryArg]
+  implicit val repositoriesArgSchema: Schema[Any, RepositoriesArg] =
+    Schema.gen[RepositoriesArg]
+  implicit val issueArgSchema: Schema[Any, IssueArg] =
+    Schema.gen[IssueArg]
+  implicit val issuesArgSchema: Schema[Any, IssuesArg] =
+    Schema.gen[IssuesArg]
 }

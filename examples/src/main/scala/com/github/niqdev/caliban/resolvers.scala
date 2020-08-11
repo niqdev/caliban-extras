@@ -1,13 +1,14 @@
 package com.github.niqdev.caliban
 
+import caliban.wrappers.Wrapper.OverallWrapper
 import caliban.{ GraphQL, RootResolver }
 import cats.effect.{ Effect, Resource, Sync }
 import com.github.niqdev.caliban.schemas._
 import com.github.niqdev.caliban.services._
+import log.effect.LogWriter
 
 object resolvers {
   import caliban.interop.cats.implicits._
-  import caliban.filter.schemas._
   import caliban.refined._
 
   /**
@@ -48,12 +49,30 @@ object resolvers {
     * Resolvers
     */
   object Resolvers {
-    // TODO log errors: mapError or Wrapper
-    private[this] def api[F[_]: Effect](services: Services[F]): GraphQL[Any] =
-      NodeRootResolver.api[F](services) |+|
-        GitHubRootResolver.api[F](services)
+    private[this] def logWrapper[F[_]](implicit logger: LogWriter[F]): OverallWrapper[Any] =
+      OverallWrapper { process => request =>
+        process(request)
+          .map { response =>
+            if (response.errors.nonEmpty)
+              logger.error(s"""
+                   |request: $request
+                   |errors: ${response.errors.mkString("\n")}
+                   |""".stripMargin)
+            else
+              logger.debug(s"""
+                   |request: $request
+                   |response: $response
+                   |""".stripMargin)
+            response
+          }
+      }
 
-    def make[F[_]: Effect](services: Services[F]) =
-      Resource.liftF(Sync[F].pure(api[F](services)))
+    private[this] def api[F[_]: Effect: LogWriter](services: Services[F]): GraphQL[Any] =
+      NodeRootResolver.api[F](services) |+|
+        GitHubRootResolver.api[F](services) @@
+          logWrapper
+
+    def make[F[_]: Effect: LogWriter](services: Services[F]) =
+      Resource.liftF(Sync[F].delay(api[F](services)))
   }
 }

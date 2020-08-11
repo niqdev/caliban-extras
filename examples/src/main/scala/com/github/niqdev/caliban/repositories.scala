@@ -316,6 +316,6 @@ object repositories {
       }
 
     def make[F[_]: Sync](xa: Transactor[F]): Resource[F, Repositories[F]] =
-      Resource.liftF(Sync[F].pure(apply[F](xa)))
+      Resource.liftF(Sync[F].delay(apply[F](xa)))
   }
 }
