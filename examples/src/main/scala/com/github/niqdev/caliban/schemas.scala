@@ -74,7 +74,7 @@ object schemas extends SchemaInstances {
     issues: IssuesArg => F[Connection[F, IssueNode[F]]]
   )
 
-  // TODO move in caliban.pagination not sealed and not higher-kinded
+  // TODO how to move in caliban.pagination? not sealed and not higher-kinded
   @GQLInterface
   @GQLName("Node")
   sealed trait Node[F[_]] {
@@ -161,6 +161,7 @@ object schemas extends SchemaInstances {
   }
 }
 
+// TODO: UserNode, RepositoryNode, Node, Edge, Connection
 // declare instances to avoid "Method too large" caused by magnolia
 sealed trait SchemaInstances {
 
@@ -189,4 +190,9 @@ sealed trait SchemaInstances {
     Schema.gen[IssueArg]
   implicit val issuesArgSchema: Schema[Any, IssuesArg] =
     Schema.gen[IssuesArg]
+
+  implicit val issueStatusSchema: Schema[Any, IssueStatus] =
+    Schema.gen[IssueStatus]
+  implicit def issueNodeSchema[F[_]]: Schema[Any, IssueNode[F]] =
+    Schema.gen[IssueNode[F]]
 }

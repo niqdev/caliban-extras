@@ -1,25 +1,19 @@
 # caliban-extras
 
-> WIP
-
-## Example
-
-A simplified version of GraphQL [GitHub](https://developer.github.com/v4/explorer) api with pagination, filters and authentication
-
-```bash
-# run example
-sbt -jvm-debug 5005 "examples/runMain com.github.niqdev.caliban.Main"
-```
-
-TODO
-* [ ] user/users
-* [ ] repository/repositories
-* [ ] issue/issues
-* [ ] pagination
-* [ ] filter
+* [x] cats [example](https://github.com/niqdev/scala-fp/pull/85)
+    - query `node` and `nodes`
+    - query `user` and `users`
+    - query `repository` and `repositories`
+    - query `issue` and `issues`
+* [x] abstract node
+* [x] abstract pagination (relay spec)
+* [ ] abstract filter (drupal spec with droste) [example](https://github.com/niqdev/scala-fp/pull/96)
+* [ ] pagination module - issue with `Node` interface
+* [ ] filter module
+* [x] refined/newtype module
+* [ ] migrate from cats to zio
 * [ ] mutations
 * [ ] subscriptions
-* [x] refined
 * [ ] enumeratum (?)
 * [ ] TLS
 * [ ] JWT auth
@@ -32,123 +26,311 @@ TODO
 * [ ] helm chart + argocd deployment (live demo)
 * [ ] tests !!!
 
-Sample queries
+## Example
+
+A minimalistic version of GraphQL [GitHub](https://developer.github.com/v4/explorer) api with pagination, filters and authentication
+
+```bash
+# run example
+sbt -jvm-debug 5005 "examples/runMain com.github.niqdev.caliban.Main"
+```
+
+### Sample queries
 
 ```graphql
-query findRepositoryByName {
-  repository(name: "zio") {
-    id
-    name
-    url
-    isFork
-    createdAt
-    updatedAt
+query counts {
+  countUsers: users(first: 1) {
+    totalCount
+  }
+  countRepositories: repositories(first: 1) {
+    totalCount
+  }
+  countIssues: issues(first: 1) {
+    totalCount
   }
 }
-
-query getNodeById {
-  node(id: "opaqueCursor") {
-    id
-    ... on User {
-      id
-      name
-      createdAt
-      updatedAt
-    }
-    ... on Repository {
-      name
-      url
-      isFork
-      createdAt
-      updatedAt
+```
+```json
+{
+  "data": {
+    "countUsers": {
+      "totalCount": 2
+    },
+    "countRepositories": {
+      "totalCount": 40
+    },
+    "countIssues": {
+      "totalCount": 40
     }
   }
 }
+```
 
-query getNodesByIds {
-  nodes(ids: [
-    "opaqueCursor",
-    "opaqueCursor"
-  ]) {
-    id
-    ... on User {
-      id
-      name
-      createdAt
-      updatedAt
-    }
-    ... on Repository {
-      name
-      url
-      isFork
-      createdAt
-      updatedAt
-    }
-  }
-}
-
-query getRepositories {
-  repositories(first: 2, after: "opaqueCursor") {
+```graphql
+query nodes {
+  userNodes: users(first: 1) {
     nodes {
       id
       name
+      createdAt
+      updatedAt
+      #repository > issue | issues
+      #repositories > issue | issues
+    }
+  }
+  repositoryNodes: repositories(first: 1) {
+    nodes {
+      id
+      name
+      url
+      isFork
+      createdAt
+      updatedAt
+      #issue
+      #issues
+    }
+  }
+  issueNodes: issues(first: 1) {
+    nodes {
+      id
+      number
+      status
+      title
+      body
+      createdAt
+      updatedAt
     }
   }
 }
-
-query getSimpleUser {
-  user(name: "typelevel") {
-    id
-    name
-    repositories(first: 10, after: "opaqueCursor") {
-      edges {
-        cursor
-        node {
-          id
-          name
+```
+```json
+{
+  "data": {
+    "userNodes": {
+      "nodes": [
+        {
+          "id": "dXNlcjp2MTpmMGZiZTEzMS0zZjY1LTQxNDUtYjM3My01YmJmYzFjOWExYWU=",
+          "name": "zio",
+          "createdAt": "2020-08-11T18:25:25.411363Z",
+          "updatedAt": "2020-08-11T18:25:25.411363Z"
         }
-      }
-      pageInfo {
-        hasNextPage
+      ]
+    },
+    "repositoryNodes": {
+      "nodes": [
+        {
+          "id": "cmVwb3NpdG9yeTp2MToxOTQ2MDQ4Ny01ZmZkLTRkMzgtYjBlOS0xNmRiNDQ4NDYxNTU=",
+          "name": "zio-s3",
+          "url": "https://github.com/zio/zio-s3",
+          "isFork": false,
+          "createdAt": "2020-08-11T18:25:25.496188Z",
+          "updatedAt": "2020-08-11T18:25:25.496188Z"
+        }
+      ]
+    },
+    "issueNodes": {
+      "nodes": [
+        {
+          "id": "aXNzdWU6djE6MjMzNTlhMjktZDQxYy00ODAxLWE2MjMtNGM2YzNmMGU5NjMy",
+          "number": 27,
+          "status": "CLOSE",
+          "title": "title6",
+          "body": "body6",
+          "createdAt": "2020-08-11T18:25:25.571263Z",
+          "updatedAt": "2020-08-11T18:25:25.571263Z"
+        }
+      ]
+    }
+  }
+}
+```
+```bash
+# user:v1:f0fbe131-3f65-4145-b373-5bbfc1c9a1ae
+echo "dXNlcjp2MTpmMGZiZTEzMS0zZjY1LTQxNDUtYjM3My01YmJmYzFjOWExYWU=" | base64 --decode
+
+# repository:v1:19460487-5ffd-4d38-b0e9-16db44846155
+echo "cmVwb3NpdG9yeTp2MToxOTQ2MDQ4Ny01ZmZkLTRkMzgtYjBlOS0xNmRiNDQ4NDYxNTU=" | base64 --decode
+
+# issue:v1:23359a29-d41c-4801-a623-4c6c3f0e9632
+echo "aXNzdWU6djE6MjMzNTlhMjktZDQxYy00ODAxLWE2MjMtNGM2YzNmMGU5NjMy" | base64 --decode
+```
+
+```graphql
+query findByParameter {
+  user(name: "zio") {
+    name
+    # it doesn't verify user ownership
+    repository(name: "shapeless") {
+      name
+      url
+      isFork
+      # it doesn't verify repository ownership
+      issue(number: 1) {
+        number
+        status
+        title
+        body
       }
     }
   }
 }
-
-query getUser {
-  user(name: "typelevel") {
-    id
-    name
-    createdAt
-    updatedAt
-    repositories(first: 10) {
-      edges {
-        cursor
-        node {
-          id
-          name
-          url
-          isFork
-          createdAt
-          updatedAt
+```
+```json
+{
+  "data": {
+    "user": {
+      "name": "zio",
+      "repository": {
+        "name": "shapeless",
+        "url": "https://github.com/milessabin/shapeless",
+        "isFork": false,
+        "issue": {
+          "number": 1,
+          "status": "OPEN",
+          "title": "title0",
+          "body": "body0"
         }
       }
-      pageInfo {
-        hasNextPage
-        hasPreviousPage
-        startCursor
-        endCursor
-      }
-      totalCount
-      nodes {
-        id
+    }
+  }
+}
+```
+
+```graphql
+query findUserPaginated {
+  users(first: 10, after: "opaqueCursor") {
+    edges {
+      cursor
+      node {
         name
-        url
-        isFork
-        createdAt
-        updatedAt
+        repositories(first: 4) {
+          nodes {
+            name
+          }
+        }
       }
     }
+    pageInfo {
+      hasNextPage
+      hasPreviousPage
+      startCursor
+      endCursor
+    }
+    totalCount
+  }
+}
+```
+```json
+{
+  "data": {
+    "users": {
+      "edges": [
+        {
+          "cursor": "Y3Vyc29yOnYxOjI=",
+          "node": {
+            "name": "zio",
+            "repositories": {
+              "nodes": [
+                {
+                  "name": "zio-lambda"
+                },
+                {
+                  "name": "zio-web"
+                },
+                {
+                  "name": "zio-ftp"
+                },
+                {
+                  "name": "zio-actors"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "cursor": "Y3Vyc29yOnYxOjE=",
+          "node": {
+            "name": "typelevel",
+            "repositories": {
+              "nodes": [
+                {
+                  "name": "scodec"
+                },
+                {
+                  "name": "ciris"
+                },
+                {
+                  "name": "refined"
+                },
+                {
+                  "name": "shapeless"
+                }
+              ]
+            }
+          }
+        }
+      ],
+      "pageInfo": {
+        "hasNextPage": false,
+        "hasPreviousPage": false,
+        "startCursor": "Y3Vyc29yOnYxOjI=",
+        "endCursor": "Y3Vyc29yOnYxOjE="
+      },
+      "totalCount": 2
+    }
+  }
+}
+```
+
+```graphql
+query byNodeIds {
+  nodes(
+    ids: [
+      "dXNlcjp2MTpmMGZiZTEzMS0zZjY1LTQxNDUtYjM3My01YmJmYzFjOWExYWU=",
+      "cmVwb3NpdG9yeTp2MToyOTBlYzI2NS1lYzkxLTRhOWItYmRkYS03YjA5NzBkYjk5Y2I=",
+      "aXNzdWU6djE6MjMzNTlhMjktZDQxYy00ODAxLWE2MjMtNGM2YzNmMGU5NjMy"
+    ]
+  ) {
+    id
+    ... on User {
+      name
+    }
+    ... on Repository {
+      name
+      url
+      isFork
+    }
+    ... on Issue {
+      number
+      status
+      title
+      body
+    }
+  }
+}
+```
+```json
+{
+  "data": {
+    "nodes": [
+      {
+        "id": "dXNlcjp2MTpmMGZiZTEzMS0zZjY1LTQxNDUtYjM3My01YmJmYzFjOWExYWU=",
+        "name": "zio"
+      },
+      {
+        "id": "cmVwb3NpdG9yeTp2MToyOTBlYzI2NS1lYzkxLTRhOWItYmRkYS03YjA5NzBkYjk5Y2I=",
+        "name": "refined",
+        "url": "https://github.com/fthomas/refined",
+        "isFork": false
+      },
+      {
+        "id": "aXNzdWU6djE6MjMzNTlhMjktZDQxYy00ODAxLWE2MjMtNGM2YzNmMGU5NjMy",
+        "number": 27,
+        "status": "CLOSE",
+        "title": "title6",
+        "body": "body6"
+      }
+    ]
   }
 }
 ```
@@ -176,6 +358,7 @@ query getUser {
     - [Evolving API Pagination at Slack](https://slack.engineering/evolving-api-pagination-at-slack-1c1f644f8e12)
 * Filter
     - Drupal [Filters](https://drupal-graphql.gitbook.io/graphql/queries/filters)
+    - [Droste](https://github.com/higherkindness/droste)
 * Caliban
     - [Caliban](https://ghostdogpr.github.io/caliban) (Documentation)
     - [Caliban: Designing a Functional GraphQL Library](https://www.youtube.com/watch?v=OC8PbviYUlQ) by Pierre Ricadat (Video)
