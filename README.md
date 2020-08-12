@@ -1,5 +1,12 @@
 # caliban-extras
 
+[![Build Status][build-image]][build-url]
+
+[build-image]: https://travis-ci.org/niqdev/caliban-extras.svg?branch=master
+[build-url]: https://travis-ci.org/niqdev/caliban-extras
+
+*TODOs*
+
 * [x] cats [example](https://github.com/niqdev/scala-fp/pull/85)
     - query `node` and `nodes`
     - query `user` and `users`
