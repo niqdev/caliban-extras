@@ -8,13 +8,16 @@
 * [x] abstract node
 * [x] abstract pagination (relay spec)
 * [ ] abstract filters (drupal spec with droste) [example](https://github.com/niqdev/scala-fp/pull/96)
+    - [doobie](https://tpolecat.github.io/doobie/index.html) support
+    - [skunk](https://tpolecat.github.io/skunk) support
+    - [slick](https://scala-slick.org) support
 * [ ] pagination module - issue with `Node` interface
 * [ ] filters module
 * [x] refined/newtype module
 * [ ] migrate from cats to zio
 * [ ] mutations
 * [ ] subscriptions
-* [ ] enumeratum (?)
+* [ ] enumeratum module (?)
 * [ ] TLS
 * [ ] JWT auth
 * [ ] static GraphiQL

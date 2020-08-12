@@ -5,6 +5,7 @@ import caliban.{ GraphQL, RootResolver }
 import cats.effect.{ Effect, Resource, Sync }
 import com.github.niqdev.caliban.schemas._
 import com.github.niqdev.caliban.services._
+import log.effect.LogWriter
 
 object resolvers {
   import caliban.interop.cats.implicits._
@@ -52,7 +53,7 @@ object resolvers {
       OverallWrapper { process => request =>
         process(request)
           .map { response =>
-            // very very non fp... LogWriter F[Unit] vs putStrLn ZIO[Console] interop ???
+            // TODO very very non fp... LogWriter F[Unit] vs putStrLn ZIO[Console] interop ???
             if (response.errors.nonEmpty)
               println(s"""
                          |request: $request
@@ -67,7 +68,9 @@ object resolvers {
         GitHubRootResolver.api[F](services) @@
           impureLogWrapper
 
-    def make[F[_]: Effect](services: Services[F]) =
-      Resource.liftF(Sync[F].delay(api[F](services)))
+    def make[F[_]: Effect: LogWriter](services: Services[F]) =
+      Resource
+        .liftF(Sync[F].delay(api[F](services)))
+        .evalTap(api => LogWriter.info(s"GraphQL Schema:\n${api.render}"))
   }
 }

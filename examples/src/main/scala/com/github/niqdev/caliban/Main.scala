@@ -34,7 +34,6 @@ object Main extends IOApp {
       repositories <- Repositories.make[F](xa)
       services     <- Services.make[F](repositories)
       api          <- Resolvers.make[F](services)
-      _            <- Resource.liftF(LogWriter.info(s"GraphQL Schema:\n${api.render}"))
       interpreter  <- Resource.liftF(api.interpreterAsync)
       httpApp = Router(
         "/api/graphql" -> Http4sAdapter.makeHttpServiceF(interpreter)
