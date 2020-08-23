@@ -75,6 +75,7 @@ object schemas extends SchemaInstances {
   )
 
   // TODO how to move in caliban.pagination? not sealed and not higher-kinded
+  // TODO Node schema https://gist.github.com/paulpdaniels/d8e932b9faee19812d2de8f56dd77a51
   @GQLInterface
   @GQLName("Node")
   sealed trait Node[F[_]] {

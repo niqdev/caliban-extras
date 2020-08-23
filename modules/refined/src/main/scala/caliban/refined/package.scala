@@ -5,7 +5,7 @@ import caliban.schema.{ ArgBuilder, Schema }
 import eu.timepit.refined.api.{ RefType, Validate }
 import io.estatico.newtype.Coercible
 
-// TODO https://github.com/estatico/scala-newtype/issues/64
+// See https://github.com/estatico/scala-newtype/issues/64
 package object refined {
 
   implicit def refinedSchema[T, P, F[_, _]](

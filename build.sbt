@@ -10,6 +10,7 @@ lazy val V = new {
   val logEffect  = "0.13.1"
   val logback    = "1.2.3"
   val refined    = "0.9.15"
+  val zio        = "1.0.1"
 
   // test
   val scalacheck = "1.14.3"
@@ -29,10 +30,13 @@ lazy val refined = project
   .settings(commonSettings)
   .settings(
     name := "caliban-extras-refined",
+    testFrameworks := Seq(new TestFramework("zio.test.sbt.ZTestFramework")),
     libraryDependencies ++= Seq(
-      "com.github.ghostdogpr" %% "caliban" % V.caliban,
-      "eu.timepit"            %% "refined" % V.refined,
-      "io.estatico"           %% "newtype" % V.newtype
+      "com.github.ghostdogpr" %% "caliban"      % V.caliban,
+      "eu.timepit"            %% "refined"      % V.refined,
+      "io.estatico"           %% "newtype"      % V.newtype,
+      "dev.zio"               %% "zio-test"     % V.zio % Test,
+      "dev.zio"               %% "zio-test-sbt" % V.zio % Test
     )
   )
 
