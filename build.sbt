@@ -29,7 +29,7 @@ lazy val refined = project
   .in(file("modules/refined"))
   .settings(commonSettings)
   .settings(
-    name := "caliban-extras-refined",
+    name := "caliban-refined",
     testFrameworks := Seq(new TestFramework("zio.test.sbt.ZTestFramework")),
     libraryDependencies ++= Seq(
       "com.github.ghostdogpr" %% "caliban"      % V.caliban,
