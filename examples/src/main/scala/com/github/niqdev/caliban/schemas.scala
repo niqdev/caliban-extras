@@ -58,20 +58,20 @@ object schemas extends SchemaInstances {
     * TODO move in caliban.pagination.resolvers
     */
   final case class NodeRoot[F[_]](
-//    node: NodeArg => F[Option[Node[F]]],
-//    nodes: NodesArg => F[List[Option[Node[F]]]]
+    node: NodeArg => F[Option[Node[F]]],
+    nodes: NodesArg => F[List[Option[Node[F]]]]
   )
 
   /**
     * GitHub roots
     */
   final case class GitHubRoot[F[_]](
-//    user: UserArg => F[Option[UserNode[F]]],
-//    users: UsersArg => F[Connection[F, UserNode[F]]],
-//    repository: RepositoryArg => F[Option[RepositoryNode[F]]],
-//    repositories: RepositoriesArg => F[Connection[F, RepositoryNode[F]]],
-//    issue: IssueArg => F[Option[IssueNode[F]]],
-//    issues: IssuesArg => F[Connection[F, IssueNode[F]]]
+    user: UserArg => F[Option[UserNode[F]]],
+    users: UsersArg => F[Connection[F, UserNode[F]]],
+    repository: RepositoryArg => F[Option[RepositoryNode[F]]],
+    repositories: RepositoriesArg => F[Connection[F, RepositoryNode[F]]],
+    issue: IssueArg => F[Option[IssueNode[F]]],
+    issues: IssuesArg => F[Connection[F, IssueNode[F]]]
   )
 
   // TODO how to move in caliban.pagination? not sealed and not higher-kinded
