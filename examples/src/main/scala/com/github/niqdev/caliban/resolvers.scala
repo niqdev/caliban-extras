@@ -7,9 +7,10 @@ import com.github.niqdev.caliban.schemas._
 import com.github.niqdev.caliban.services._
 import log.effect.LogWriter
 
+@scala.annotation.nowarn
 object resolvers {
   import caliban.interop.cats.implicits._
-  import caliban.refined._
+  //import caliban.refined._
 
   /**
     * Node resolver
@@ -17,8 +18,8 @@ object resolvers {
   private[this] object NodeQuery {
     def resolver[F[_]: Effect](services: Services[F]): NodeRoot[F] =
       NodeRoot(
-        node = services.nodeService.findNode,
-        nodes = services.nodeService.findNodes
+//        node = services.nodeService.findNode,
+//        nodes = services.nodeService.findNodes
       )
   }
   object NodeRootResolver {
@@ -32,12 +33,12 @@ object resolvers {
   private[this] object GitHubQuery {
     def resolver[F[_]: Effect](services: Services[F]): GitHubRoot[F] =
       GitHubRoot(
-        user = services.userService.findByName,
-        users = services.userService.findUsers,
-        repository = services.repositoryService.findByName,
-        repositories = services.repositoryService.findRepositories(None),
-        issue = services.issueService.findByNumber,
-        issues = services.issueService.findIssues(None)
+//        user = services.userService.findByName,
+//        users = services.userService.findUsers,
+//        repository = services.repositoryService.findByName,
+//        repositories = services.repositoryService.findRepositories(None),
+//        issue = services.issueService.findByNumber,
+//        issues = services.issueService.findIssues(None)
       )
   }
   object GitHubRootResolver {
