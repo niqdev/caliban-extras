@@ -4,8 +4,8 @@ lazy val V = new {
   val catsEffect = "2.1.4"
   val doobie     = "0.9.0"
   val enumeratum = "1.6.1"
-  val flyway     = "6.5.5"
-  val http4s     = "0.21.6"
+  val flyway     = "6.5.3"
+  val http4s     = "0.21.7"
   val newtype    = "0.4.4"
   val logEffect  = "0.13.1"
   val logback    = "1.2.3"
@@ -14,7 +14,7 @@ lazy val V = new {
 
   // test
   val scalacheck = "1.14.3"
-  val scalatest  = "3.2.1"
+  val scalatest  = "3.2.2"
 }
 
 lazy val commonSettings = Seq(
