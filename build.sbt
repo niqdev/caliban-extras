@@ -14,7 +14,7 @@ lazy val V = new {
 
   // test
   val scalacheck = "1.14.3"
-  val scalatest  = "3.2.1"
+  val scalatest  = "3.2.2"
 }
 
 lazy val commonSettings = Seq(
