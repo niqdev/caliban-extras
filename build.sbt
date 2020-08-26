@@ -25,9 +25,19 @@ lazy val commonSettings = Seq(
   )
 )
 
+lazy val publishSettings = Seq(
+  homepage := Some(url("https://github.com/niqdev/caliban-extras")),
+  // TODO
+  licenses := List("Apache-2.0" -> url("http://www.apache.org/licenses/LICENSE-2.0")),
+  developers := List(
+    Developer("niqdev", "niqdev", "niqdev@users.noreply.github.com", url("https://github.com/niqdev"))
+  )
+)
+
 lazy val refined = project
   .in(file("modules/refined"))
   .settings(commonSettings)
+  .settings(publishSettings)
   .settings(
     name := "caliban-refined",
     testFrameworks := Seq(new TestFramework("zio.test.sbt.ZTestFramework")),
