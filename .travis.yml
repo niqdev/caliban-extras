@@ -4,6 +4,7 @@ jdk:
   - openjdk11
 
 scala:
+  - 2.12.12
   - 2.13.3
 
 cache:
@@ -17,13 +18,13 @@ before_install:
   - git fetch --tags
 
 stages:
-  - name: build
+  - name: test
   - name: release
     if: ((branch = master AND type = push) OR (tag IS present)) AND NOT fork
 
 jobs:
   include:
-    - name: build
+    - name: test
       script: sbt ++$TRAVIS_SCALA_VERSION build
     - stage: release
       script: sbt ci-release
