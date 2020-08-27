@@ -21,9 +21,21 @@ lazy val commonSettings = Seq(
   organization := "com.github.niqdev",
   crossScalaVersions := List("2.12.12", "2.13.3"),
   scalaVersion := "2.13.3",
-  scalacOptions ++= Seq(
-    "-Ymacro-annotations"
-  )
+  // macro required by newtype
+  scalacOptions ++= PartialFunction
+    .condOpt(CrossVersion.partialVersion(scalaVersion.value)) {
+      case Some((2, n)) if n >= 13 =>
+        Seq("-Ymacro-annotations")
+    }
+    .toList
+    .flatten,
+  libraryDependencies ++= {
+    CrossVersion.partialVersion(scalaVersion.value) match {
+      case Some((2, v)) if v <= 12 =>
+        Seq(compilerPlugin("org.scalamacros" % "paradise" % "2.1.1" cross CrossVersion.full))
+      case _ => Nil
+    }
+  }
 )
 
 lazy val publishSettings = Seq(
