@@ -19,6 +19,7 @@ lazy val V = new {
 
 lazy val commonSettings = Seq(
   organization := "com.github.niqdev",
+  crossScalaVersions := List("2.12.12", "2.13.3"),
   scalaVersion := "2.13.3",
   scalacOptions ++= Seq(
     "-Ymacro-annotations"
@@ -28,9 +29,20 @@ lazy val commonSettings = Seq(
 lazy val publishSettings = Seq(
   homepage := Some(url("https://github.com/niqdev/caliban-extras")),
   licenses := List("MIT" -> url("https://github.com/niqdev/caliban-extras/blob/master/LICENSE")),
+  scmInfo := Some(
+    ScmInfo(
+      url(s"https://github.com/niqdev/caliban-extras"),
+      "scm:git:git@github.com:niqdev/caliban-extras.git"
+    )
+  ),
   developers := List(
     Developer("niqdev", "niqdev", "niqdev@users.noreply.github.com", url("https://github.com/niqdev"))
   )
+)
+
+lazy val disablePublishSettings = Seq(
+  skip in publish := true,
+  publishArtifact := false
 )
 
 lazy val refined = project
@@ -53,6 +65,7 @@ lazy val core = project
   .in(file("modules/core"))
   .dependsOn(refined)
   .settings(commonSettings)
+  .settings(disablePublishSettings)
   .settings(
     name := "caliban-extras-core",
     libraryDependencies ++= Seq(
@@ -68,6 +81,7 @@ lazy val core = project
 lazy val doobie = project
   .in(file("modules/doobie"))
   .settings(commonSettings)
+  .settings(disablePublishSettings)
   .settings(
     name := "caliban-extras-doobie",
     libraryDependencies ++= Seq(
@@ -82,6 +96,7 @@ lazy val examples = project
   .in(file("examples"))
   .dependsOn(core, doobie)
   .settings(commonSettings)
+  .settings(disablePublishSettings)
   .settings(
     name := "caliban-extras-examples",
     libraryDependencies ++= Seq(
