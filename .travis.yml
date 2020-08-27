@@ -1,5 +1,3 @@
-sudo: false
-
 language: scala
 
 jdk:
@@ -15,5 +13,17 @@ cache:
     - $HOME/.coursier/cache
     - $HOME/.sbt
 
-script:
-  - sbt ++$TRAVIS_SCALA_VERSION build
+before_install:
+  - git fetch --tags
+
+stages:
+  - name: build
+  - name: release
+    if: ((branch = master AND type = push) OR (tag IS present)) AND NOT fork
+
+jobs:
+  include:
+    - name: build
+      script: sbt ++$TRAVIS_SCALA_VERSION build
+    - stage: release
+      script: sbt ci-release

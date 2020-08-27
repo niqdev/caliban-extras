@@ -27,8 +27,7 @@ lazy val commonSettings = Seq(
 
 lazy val publishSettings = Seq(
   homepage := Some(url("https://github.com/niqdev/caliban-extras")),
-  // TODO
-  licenses := List("Apache-2.0" -> url("http://www.apache.org/licenses/LICENSE-2.0")),
+  licenses := List("MIT" -> url("https://github.com/niqdev/caliban-extras/blob/master/LICENSE")),
   developers := List(
     Developer("niqdev", "niqdev", "niqdev@users.noreply.github.com", url("https://github.com/niqdev"))
   )
