@@ -19,8 +19,11 @@ lazy val V = new {
 
 lazy val commonSettings = Seq(
   organization := "com.github.niqdev",
+  scalaVersion := "2.13.3"
+)
+
+lazy val crossScalaVersionsSettings = Seq(
   crossScalaVersions := List("2.12.12", "2.13.3"),
-  scalaVersion := "2.13.3",
   // macro required by newtype
   scalacOptions ++= PartialFunction
     .condOpt(CrossVersion.partialVersion(scalaVersion.value)) {
@@ -60,6 +63,7 @@ lazy val disablePublishSettings = Seq(
 lazy val refined = project
   .in(file("modules/refined"))
   .settings(commonSettings)
+  .settings(crossScalaVersionsSettings)
   .settings(publishSettings)
   .settings(
     name := "caliban-refined",
