@@ -19,16 +19,14 @@ lazy val V = new {
 
 lazy val commonSettings = Seq(
   organization := "com.github.niqdev",
-  scalaVersion := "2.13.3"
-)
-
-lazy val crossScalaVersionsSettings = Seq(
   crossScalaVersions := List("2.12.12", "2.13.3"),
-  // macro required by newtype
+  scalaVersion := "2.13.3",
   scalacOptions ++= PartialFunction
     .condOpt(CrossVersion.partialVersion(scalaVersion.value)) {
-      case Some((2, n)) if n >= 13 =>
+      case Some((2, v)) if v >= 13 =>
         Seq("-Ymacro-annotations")
+      case Some((2, v)) if v <= 12 =>
+        Seq("-Xsource:2.13")
     }
     .toList
     .flatten,
@@ -36,7 +34,8 @@ lazy val crossScalaVersionsSettings = Seq(
     CrossVersion.partialVersion(scalaVersion.value) match {
       case Some((2, v)) if v <= 12 =>
         Seq(compilerPlugin("org.scalamacros" % "paradise" % "2.1.1" cross CrossVersion.full))
-      case _ => Nil
+      case _ =>
+        Seq.empty
     }
   }
 )
@@ -63,7 +62,6 @@ lazy val disablePublishSettings = Seq(
 lazy val refined = project
   .in(file("modules/refined"))
   .settings(commonSettings)
-  .settings(crossScalaVersionsSettings)
   .settings(publishSettings)
   .settings(
     name := "caliban-refined",
