@@ -121,9 +121,7 @@ lazy val examples = project
       "com.beachape"          %% "enumeratum-circe"    % V.enumeratum,
       "com.beachape"          %% "enumeratum-doobie"   % "1.6.0",
       "io.laserdisc"          %% "log-effect-fs2"      % V.logEffect,
-      "ch.qos.logback"         % "logback-classic"     % V.logback    % Runtime,
-      "org.scalatest"         %% "scalatest"           % V.scalatest  % Test,
-      "org.scalacheck"        %% "scalacheck"          % V.scalacheck % Test
+      "ch.qos.logback"         % "logback-classic"     % V.logback % Runtime
     )
   )
 
