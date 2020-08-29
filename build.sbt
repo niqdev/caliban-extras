@@ -41,8 +41,6 @@ lazy val commonSettings = Seq(
 )
 
 lazy val publishSettings = Seq(
-  // overrides "sonatypeProfileName : caliban-extras"
-  sonatypeProfileName := organization.value,
   homepage := Some(url("https://github.com/niqdev/caliban-extras")),
   licenses := List("MIT" -> url("https://github.com/niqdev/caliban-extras/blob/master/LICENSE")),
   scmInfo := Some(
