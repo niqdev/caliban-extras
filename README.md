@@ -11,44 +11,56 @@
 [scala-steward-image]: https://img.shields.io/badge/Scala_Steward-helping-blue.svg?style=popout-square&logo=data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAA4AAAAQCAMAAAARSr4IAAAAVFBMVEUAAACHjojlOy5NWlrKzcYRKjGFjIbp293YycuLa3pYY2LSqql4f3pCUFTgSjNodYRmcXUsPD/NTTbjRS+2jomhgnzNc223cGvZS0HaSD0XLjbaSjElhIr+AAAAAXRSTlMAQObYZgAAAHlJREFUCNdNyosOwyAIhWHAQS1Vt7a77/3fcxxdmv0xwmckutAR1nkm4ggbyEcg/wWmlGLDAA3oL50xi6fk5ffZ3E2E3QfZDCcCN2YtbEWZt+Drc6u6rlqv7Uk0LdKqqr5rk2UCRXOk0vmQKGfc94nOJyQjouF9H/wCc9gECEYfONoAAAAASUVORK5CYII=
 [scala-steward-url]: https://scala-steward.org
 
-*TODOs*
+* [caliban-refined](#caliban-refined)
+* [Example](#example)
+* [Resources](#resources)
+* [TODO](#todo)
 
-* [x] cats [example](https://github.com/niqdev/scala-fp/pull/85)
-    - query `node` and `nodes`
-    - query `user` and `users`
-    - query `repository` and `repositories`
-    - query `issue` and `issues`
-* [x] abstract node
-* [x] abstract pagination (relay spec)
-* [ ] abstract filters (drupal spec with droste) [example](https://github.com/niqdev/scala-fp/pull/96)
-    - [doobie](https://tpolecat.github.io/doobie/index.html) support
-    - [skunk](https://tpolecat.github.io/skunk) support
-    - [slick](https://scala-slick.org) support
-* [ ] pagination module - issue with `Node` interface
-* [ ] filters module
-* [x] refined/newtype module
-* [ ] migrate from cats to zio
-* [ ] mutations
-* [ ] subscriptions
-* [ ] enumeratum module (?)
-* [ ] TLS
-* [ ] JWT auth
-* [ ] static GraphiQL
-* [ ] static doc (markdown)
-    - https://github.com/2fd/graphdoc
-    - https://github.com/wayfair/dociql
-    - https://github.com/gjtorikian/graphql-docs
-    - https://github.com/edno/docusaurus2-graphql-doc-generator
-* [ ] helm chart + argocd deployment (live demo)
-* [ ] tests !!!
+## caliban-refined
+
+Tiny module to add [refined](https://github.com/fthomas/refined) and [newtype](https://github.com/estatico/scala-newtype) support for [Schema](https://ghostdogpr.github.io/caliban/docs/schema.html#schemas) and [ArgBuilder](https://ghostdogpr.github.io/caliban/docs/schema.html#arguments)
+
+Replace all the custom repeating implementations like
+```scala
+implicit val nonEmptyStringSchema: Schema[Any, NonEmptyString] =
+  Schema.stringSchema.contramap(_.value)
+
+implicit val nonNegIntArgBuilder: ArgBuilder[NonNegInt] = {	
+  case value: IntValue =>	
+    NonNegInt.from(value.toInt).leftMap(CalibanError.ExecutionError(_))	
+  case other =>
+    Left(CalibanError.ExecutionError(s"Can't build a NonNegInt from input $other"))	
+}
+```
+
+with an import
+
+```scala
+// add import
+import caliban.refined._
+
+@newtype case class Id(int: PosInt)
+@newtype case class Name(string: NonEmptyString)
+case class User(id: Id, name: Name)
+case class UserArg(id: Id)
+case class Query(user: UserArg => User)
+
+val resolver = Query(arg => User(arg.id, Name("myName")))
+val api      = GraphQL.graphQL(RootResolver(resolver))
+```
+
+See the [tests](https://github.com/niqdev/caliban-extras/blob/master/modules/refined/src/test/scala/caliban/refined/RefinedSpec.scala) for a complete example
 
 ## Example
 
-A minimalistic version of GraphQL [GitHub](https://developer.github.com/v4/explorer) api with pagination, filters and authentication
+A minimalistic version of GraphQL [GitHub](https://developer.github.com/v4/explorer) api with pagination, *filters and authentication (TODO)*
 
 ```bash
 # run example
 sbt -jvm-debug 5005 "examples/runMain com.github.niqdev.caliban.Main"
+
+# verify endpoint
+http -v :8080/api/graphql query='{users(first:1){totalCount}}'
 ```
 
 ### Sample queries
@@ -379,3 +391,34 @@ query findByNodeIds {
     - [Caliban](https://ghostdogpr.github.io/caliban) (Documentation)
     - [Caliban: Designing a Functional GraphQL Library](https://www.youtube.com/watch?v=OC8PbviYUlQ) by Pierre Ricadat (Video)
     - [GraphQL in Scala with Caliban](https://medium.com/@ghostdogpr/graphql-in-scala-with-caliban-part-1-8ceb6099c3c2)
+
+## TODO
+
+* [x] cats [example](https://github.com/niqdev/scala-fp/pull/85)
+    - query `node` and `nodes`
+    - query `user` and `users`
+    - query `repository` and `repositories`
+    - query `issue` and `issues`
+* [x] abstract node
+* [x] abstract pagination (relay spec)
+* [ ] abstract filters (drupal spec with droste) [example](https://github.com/niqdev/scala-fp/pull/96)
+    - [doobie](https://tpolecat.github.io/doobie/index.html) support
+    - [skunk](https://tpolecat.github.io/skunk) support
+    - [slick](https://scala-slick.org) support
+* [ ] pagination module - issue with `Node` interface, see possible [solution](https://gist.github.com/paulpdaniels/d8e932b9faee19812d2de8f56dd77a51)
+* [ ] filters module
+* [x] refined/newtype module
+* [ ] migrate from cats to zio
+* [ ] mutations example
+* [ ] subscriptions example
+* [ ] enumeratum module (?)
+* [ ] TLS
+* [ ] JWT auth
+* [ ] static GraphiQL
+* [ ] static doc (markdown)
+    - https://github.com/2fd/graphdoc
+    - https://github.com/wayfair/dociql
+    - https://github.com/gjtorikian/graphql-docs
+    - https://github.com/edno/docusaurus2-graphql-doc-generator
+* [ ] helm chart + argocd deployment (live demo)
+* [ ] tests !!!
