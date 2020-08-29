@@ -19,7 +19,7 @@ lazy val V = new {
 
 lazy val commonSettings = Seq(
   organization := "com.github.niqdev",
-  //crossScalaVersions := List("2.12.12", "2.13.3"),
+  crossScalaVersions := List("2.12.12", "2.13.3"),
   scalaVersion := "2.13.3",
   scalacOptions ++= PartialFunction
     .condOpt(CrossVersion.partialVersion(scalaVersion.value)) {
@@ -128,6 +128,7 @@ lazy val examples = project
 lazy val root = project
   .in(file("."))
   .aggregate(core, doobie, refined, examples)
+  .settings(disablePublishSettings)
   .settings(
     name := "caliban-extras",
     addCommandAlias("checkFormat", ";scalafmtCheckAll;scalafmtSbtCheck"),
