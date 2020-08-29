@@ -29,7 +29,7 @@ Add the following line in `build.sbt`
 libraryDependencies += "com.github.niqdev" %% "caliban-refined" % "0.1.3"
 ```
 
-Replace all the custom repeating implementations like
+Replace all the custom implementations like
 ```scala
 implicit val nonEmptyStringSchema: Schema[Any, NonEmptyString] =
   Schema.stringSchema.contramap(_.value)
