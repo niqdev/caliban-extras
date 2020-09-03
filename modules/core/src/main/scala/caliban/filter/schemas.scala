@@ -4,8 +4,6 @@ import caliban.filter.schemas._
 import caliban.schema.{ ArgBuilder, Schema }
 import caliban.{ CalibanError, InputValue }
 import cats.data.NonEmptyList
-import cats.instances.either._
-import cats.instances.list._
 import cats.syntax.traverse._
 import eu.timepit.refined.types.string.NonEmptyString
 import io.estatico.newtype.macros.newtype

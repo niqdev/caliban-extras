@@ -1,8 +1,6 @@
 package com.github.niqdev.caliban
 
 import cats.effect.{ Resource, Sync }
-import cats.instances.list._
-import cats.instances.option._
 import cats.syntax.applicativeError._
 import cats.syntax.flatMap._
 import cats.syntax.foldable._
