@@ -1,5 +1,5 @@
 lazy val V = new {
-  val caliban    = "0.9.1"
+  val caliban    = "0.9.2"
   val catsCore   = "2.1.1"
   val catsEffect = "2.1.4"
   val doobie     = "0.9.0"
