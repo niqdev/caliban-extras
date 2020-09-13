@@ -66,7 +66,7 @@ object resolvers {
     private[this] def api[F[_]: Effect](services: Services[F]): GraphQL[Any] =
       NodeRootResolver.api[F](services) |+|
         GitHubRootResolver.api[F](services) @@
-          impureLogWrapper
+        impureLogWrapper
 
     def make[F[_]: Effect: LogWriter](services: Services[F]) =
       Resource

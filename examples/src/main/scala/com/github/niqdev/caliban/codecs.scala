@@ -56,16 +56,15 @@ object codecs {
         RepositoriesArg => F[Connection[F, RepositoryNode[F]]]
       ),
       UserNode[F]
-    ] = {
-      case (model, repositoryF, repositoriesF) =>
-        UserNode(
-          id = idSchemaEncoder.from(model.id),
-          name = model.name.value,
-          createdAt = model.createdAt,
-          updatedAt = model.updatedAt,
-          repository = repositoryF,
-          repositories = repositoriesF
-        )
+    ] = { case (model, repositoryF, repositoriesF) =>
+      UserNode(
+        id = idSchemaEncoder.from(model.id),
+        name = model.name.value,
+        createdAt = model.createdAt,
+        updatedAt = model.updatedAt,
+        repository = repositoryF,
+        repositories = repositoriesF
+      )
     }
 
     implicit def repositorySchemaEncoder[F[_]](
@@ -77,18 +76,17 @@ object codecs {
         IssuesArg => F[Connection[F, IssueNode[F]]]
       ),
       RepositoryNode[F]
-    ] = {
-      case (model, issueF, issuesF) =>
-        RepositoryNode(
-          id = idSchemaEncoder.from(model.id),
-          name = model.name.value,
-          url = model.url.value,
-          isFork = model.isFork,
-          createdAt = model.createdAt,
-          updatedAt = model.updatedAt,
-          issue = issueF,
-          issues = issuesF
-        )
+    ] = { case (model, issueF, issuesF) =>
+      RepositoryNode(
+        id = idSchemaEncoder.from(model.id),
+        name = model.name.value,
+        url = model.url.value,
+        isFork = model.isFork,
+        createdAt = model.createdAt,
+        updatedAt = model.updatedAt,
+        issue = issueF,
+        issues = issuesF
+      )
     }
 
     implicit def issueSchemaEncoder[F[_]](
@@ -113,12 +111,11 @@ object codecs {
     implicit def edgeSchemaEncoder[F[_], M, S <: Node[F]](
       implicit cSchemaEncoder: SchemaEncoder[RowNumber, Cursor],
       nSchemaEncoder: SchemaEncoder[M, S]
-    ): SchemaEncoder[(M, RowNumber), Edge[F, S]] = {
-      case (model, rowNumber) =>
-        Edge(
-          cursor = cSchemaEncoder.from(rowNumber),
-          node = nSchemaEncoder.from(model)
-        )
+    ): SchemaEncoder[(M, RowNumber), Edge[F, S]] = { case (model, rowNumber) =>
+      Edge(
+        cursor = cSchemaEncoder.from(rowNumber),
+        node = nSchemaEncoder.from(model)
+      )
     }
   }
 
