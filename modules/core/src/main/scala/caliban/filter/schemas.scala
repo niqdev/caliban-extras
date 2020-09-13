@@ -79,7 +79,7 @@ sealed trait FilterSchemaInstances {
   implicit def nonEmptyListSchema[A](
     implicit ev: Schema[Any, A]
   ): Schema[Any, NonEmptyList[A]] =
-    Schema.listSchema[A].contramap(_.toList)
+    Schema.listSchema[Any, A].contramap(_.toList)
 }
 
 sealed trait FilterArgInstances {
