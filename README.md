@@ -26,7 +26,7 @@ A tiny module to add [refined](https://github.com/fthomas/refined) and [newtype]
 Add the following line in `build.sbt`
 
 ```sbt
-libraryDependencies += "com.github.niqdev" %% "caliban-refined" % "0.1.3"
+libraryDependencies += "com.github.niqdev" %% "caliban-refined" % "0.1.4"
 ```
 
 Replace all the custom implementations like
