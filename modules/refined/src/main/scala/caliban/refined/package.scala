@@ -1,6 +1,5 @@
 package caliban
 
-import caliban.Value._
 import caliban.schema.{ ArgBuilder, Schema }
 import eu.timepit.refined.api.{ RefType, Validate }
 import io.estatico.newtype.Coercible
@@ -25,42 +24,16 @@ package object refined {
   ): Schema[Any, N] =
     ev(schema)
 
-  // see io.circe.refined and caliban.ValueCirce
   implicit def refinedArgBuilder[T, P, F[_, _]](
     implicit validate: Validate[T, P],
-    refType: RefType[F]
-  ): ArgBuilder[F[T, P]] =
-    new ArgBuilder[F[T, P]] {
-      // see leftMap: cats.syntax.either.catsSyntaxEither
-      lazy val refineArgBuilder: Any => Either[CalibanError.ExecutionError, F[T, P]] =
-        value =>
-          refType.refine(value.asInstanceOf[T]) match {
-            case r @ Right(_) => r.asInstanceOf[Either[CalibanError.ExecutionError, F[T, P]]]
-            case Left(str)    => Left(CalibanError.ExecutionError(str))
-          }
-
-      override def build(input: InputValue): Either[CalibanError.ExecutionError, F[T, P]] =
-        input match {
-          case v: IntValue =>
-            v match {
-              case IntValue.IntNumber(value)    => refineArgBuilder(value)
-              case IntValue.LongNumber(value)   => refineArgBuilder(value)
-              case IntValue.BigIntNumber(value) => refineArgBuilder(value)
-            }
-          case v: FloatValue =>
-            v match {
-              case FloatValue.FloatNumber(value)      => refineArgBuilder(value)
-              case FloatValue.DoubleNumber(value)     => refineArgBuilder(value)
-              case FloatValue.BigDecimalNumber(value) => refineArgBuilder(value)
-            }
-          case StringValue(value)  => refineArgBuilder(value)
-          case BooleanValue(value) => refineArgBuilder(value)
-          case EnumValue(value)    => refineArgBuilder(value)
-          //case NullValue =>
-          case other =>
-            Left(CalibanError.ExecutionError(s"Can't build a Refined from input $other"))
-        }
+    refType: RefType[F],
+    sourceArgBuilder: ArgBuilder[T]
+  ): ArgBuilder[F[T, P]] = sourceArgBuilder.flatMap { t =>
+    refType.refine(t) match {
+      case Left(str)    => Left(CalibanError.ExecutionError(str))
+      case r @ Right(_) => r.asInstanceOf[Either[CalibanError.ExecutionError, F[T, P]]]
     }
+  }
 
   /*
    * Given an ArgBuilder instance for a phantom type F[R, P]
