@@ -1,7 +1,7 @@
 lazy val V = new {
   val caliban    = "0.9.3"
-  val catsCore   = "2.2.0"
-  val catsEffect = "2.2.0"
+  val catsCore   = "2.3.0"
+  val catsEffect = "2.3.0"
   val doobie     = "0.9.4"
   val enumeratum = "1.6.1"
   val flyway     = "7.1.1"
