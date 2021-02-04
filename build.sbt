@@ -4,13 +4,13 @@ lazy val V = new {
   val catsEffect = "2.3.1"
   val doobie     = "0.10.0"
   val enumeratum = "1.6.1"
-  val flyway     = "7.5.2"
-  val http4s     = "0.21.15"
+  val flyway     = "7.5.0"
+  val http4s     = "0.21.18"
   val newtype    = "0.4.4"
   val logEffect  = "0.14.1"
   val logback    = "1.2.3"
   val refined    = "0.9.20"
-  val zio        = "1.0.3"
+  val zio        = "1.0.4-2"
 
   // test
   val scalacheck = "1.15.2"
