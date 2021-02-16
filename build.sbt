@@ -13,7 +13,7 @@ lazy val V = new {
   val zio        = "1.0.4-2"
 
   // test
-  val scalacheck = "1.15.2"
+  val scalacheck = "1.15.3"
   val scalatest  = "3.2.3"
 }
 
