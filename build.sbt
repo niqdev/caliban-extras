@@ -1,11 +1,11 @@
 lazy val V = new {
   val caliban    = "0.9.4"
   val catsCore   = "2.4.2"
-  val catsEffect = "2.4.2"
+  val catsEffect = "2.3.2"
   val doobie     = "0.10.0"
   val enumeratum = "1.6.1"
   val flyway     = "7.5.2"
-  val http4s     = "0.21.18"
+  val http4s     = "0.21.19"
   val newtype    = "0.4.4"
   val logEffect  = "0.14.1"
   val logback    = "1.2.3"
@@ -13,7 +13,7 @@ lazy val V = new {
   val zio        = "1.0.4-2"
 
   // test
-  val scalacheck = "1.15.2"
+  val scalacheck = "1.15.3"
   val scalatest  = "3.2.3"
 }
 
