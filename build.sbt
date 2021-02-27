@@ -19,7 +19,7 @@ lazy val V = new {
 
 lazy val commonSettings = Seq(
   organization := "com.github.niqdev",
-  crossScalaVersions := List("2.12.12", "2.13.3"),
+  crossScalaVersions := List("2.12.13", "2.13.3"),
   scalaVersion := "2.13.3",
   scalacOptions ++= PartialFunction
     .condOpt(CrossVersion.partialVersion(scalaVersion.value)) {
