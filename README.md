@@ -433,3 +433,24 @@ query findByNodeIds {
     - https://github.com/edno/docusaurus2-graphql-doc-generator
 * [ ] helm chart + argocd deployment (live demo)
 * [ ] tests !!!
+
+<!--
+
+# Offset Pagination in SQL
+
+SELECT ... FROM table
+OFFSET <page-size * page-number>
+LIMIT <page-size>
+
+# Keyset Pagination in SQL
+
+SELECT ... FROM table
+ORDER BY create_time DESC, id ASC
+LIMIT <page-size>
+
+SELECT ... FROM table
+ORDER BY create_time DESC, id ASC
+WHERE (create_time < last.create_time) OR (create_time = last.create_time AND id > last.id)
+LIMIT <page-size>
+
+-->
