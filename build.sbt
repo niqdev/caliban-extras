@@ -10,7 +10,7 @@ lazy val V = new {
   val logEffect  = "0.14.1"
   val logback    = "1.2.3"
   val refined    = "0.9.21"
-  val zio        = "1.0.4-2"
+  val zio        = "1.0.9"
 
   // test
   val scalacheck = "1.15.3"
