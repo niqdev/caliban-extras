@@ -18,9 +18,9 @@ lazy val V = new {
 }
 
 lazy val commonSettings = Seq(
-  organization := "com.github.niqdev",
+  organization       := "com.github.niqdev",
   crossScalaVersions := List("2.12.12", "2.13.5"),
-  scalaVersion := "2.13.5",
+  scalaVersion       := "2.13.5",
   scalacOptions ++= PartialFunction
     .condOpt(CrossVersion.partialVersion(scalaVersion.value)) {
       case Some((2, v)) if v >= 13 =>
@@ -64,7 +64,7 @@ lazy val refined = project
   .settings(commonSettings)
   .settings(publishSettings)
   .settings(
-    name := "caliban-refined",
+    name           := "caliban-refined",
     testFrameworks := Seq(new TestFramework("zio.test.sbt.ZTestFramework")),
     libraryDependencies ++= Seq(
       "com.github.ghostdogpr" %% "caliban"      % V.caliban,
