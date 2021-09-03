@@ -18,7 +18,7 @@ object RefinedSpec extends DefaultRunnableSpec {
 
         val resolver = Query(User(NonEmptyString.unsafeFrom("myName")))
         val api      = GraphQL.graphQL(RootResolver(resolver))
-        val query    = gqldoc("""
+        val query = gqldoc("""
           query {
             user {
               name
@@ -39,7 +39,7 @@ object RefinedSpec extends DefaultRunnableSpec {
 
         val resolver = Query(User(Name("myName")))
         val api      = GraphQL.graphQL(RootResolver(resolver))
-        val query    = gqldoc("""
+        val query = gqldoc("""
           query {
             user {
               name
@@ -58,7 +58,7 @@ object RefinedSpec extends DefaultRunnableSpec {
 
         val resolver = Query(arg => User(arg.id, NonEmptyString.unsafeFrom("myName")))
         val api      = GraphQL.graphQL(RootResolver(resolver))
-        val query    = gqldoc("""
+        val query = gqldoc("""
           query {
             user(id: 1) {
               id
@@ -82,7 +82,7 @@ object RefinedSpec extends DefaultRunnableSpec {
 
         val resolver = Query(arg => User(arg.id, Name("myName")))
         val api      = GraphQL.graphQL(RootResolver(resolver))
-        val query    = gqldoc("""
+        val query = gqldoc("""
           query {
             user(id: 1) {
               id
