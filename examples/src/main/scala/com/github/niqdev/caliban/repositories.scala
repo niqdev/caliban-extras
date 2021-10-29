@@ -227,7 +227,7 @@ object repositories {
 
     private[this] val nop = fr""
 
-    //@scala.annotation.nowarn due to private[this]
+    // @scala.annotation.nowarn due to private[this]
     def select(
       columns: Fragment,
       fromTable: Fragment,
