@@ -8,7 +8,7 @@ lazy val V = new {
   val http4s     = "0.21.19"
   val newtype    = "0.4.4"
   val logEffect  = "0.14.1"
-  val logback    = "1.2.3"
+  val logback    = "1.2.10"
   val refined    = "0.9.21"
   val zio        = "1.0.4-2"
 
