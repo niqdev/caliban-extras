@@ -19,8 +19,8 @@ lazy val V = new {
 
 lazy val commonSettings = Seq(
   organization := "com.github.niqdev",
-  crossScalaVersions := List("2.12.12", "2.13.5"),
-  scalaVersion := "2.13.5",
+  crossScalaVersions := List("2.12.12", "2.13.8"),
+  scalaVersion := "2.13.8",
   scalacOptions ++= PartialFunction
     .condOpt(CrossVersion.partialVersion(scalaVersion.value)) {
       case Some((2, v)) if v >= 13 =>
