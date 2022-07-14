@@ -403,6 +403,8 @@ query findByNodeIds {
     - [Caliban](https://ghostdogpr.github.io/caliban) (Documentation)
     - [Caliban: Designing a Functional GraphQL Library](https://www.youtube.com/watch?v=OC8PbviYUlQ) by Pierre Ricadat (Video)
     - [GraphQL in Scala with Caliban](https://medium.com/@ghostdogpr/graphql-in-scala-with-caliban-part-1-8ceb6099c3c2)
+* Other
+    - [GraphQLite](https://graphqlite.com)
 
 ## TODO
 
