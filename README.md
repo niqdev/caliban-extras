@@ -383,6 +383,7 @@ query findByNodeIds {
     - [The Fullstack Tutorial for GraphQL](https://www.howtographql.com)
     - [awesome-graphql](https://github.com/chentsulin/awesome-graphql)
     - [Public GraphQL APIs](https://github.com/APIs-guru/graphql-apis)
+    - [graphqurl](https://github.com/hasura/graphqurl) (cli)
 * GraphiQL
     - [GraphiQL](https://github.com/graphql/graphiql)
     - [Altair GraphQL Client](https://altair.sirmuel.design) (GUI)
