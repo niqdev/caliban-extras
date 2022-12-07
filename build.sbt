@@ -119,7 +119,7 @@ lazy val examples = project
       "com.github.ghostdogpr" %% "caliban-http4s"      % V.caliban,
       "com.beachape"          %% "enumeratum"          % V.enumeratum,
       "com.beachape"          %% "enumeratum-circe"    % V.enumeratum,
-      "com.beachape"          %% "enumeratum-doobie"   % "1.6.0",
+      "com.beachape"          %% "enumeratum-doobie"   % "1.7.3",
       "io.laserdisc"          %% "log-effect-fs2"      % V.logEffect,
       "ch.qos.logback"         % "logback-classic"     % V.logback % Runtime
     )
