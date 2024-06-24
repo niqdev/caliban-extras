@@ -9,7 +9,7 @@ lazy val V = new {
   val newtype    = "0.4.4"
   val logEffect  = "0.14.1"
   val logback    = "1.2.3"
-  val refined    = "0.9.21"
+  val refined    = "0.9.29"
   val zio        = "1.0.4-2"
 
   // test
