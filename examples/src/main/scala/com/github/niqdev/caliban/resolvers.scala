@@ -70,7 +70,7 @@ object resolvers {
 
     def make[F[_]: Effect: LogWriter](services: Services[F]) =
       Resource
-        .liftF(Sync[F].delay(api[F](services)))
+        .eval(Sync[F].delay(api[F](services)))
         .evalTap(api => LogWriter.info(s"GraphQL Schema:\n${api.render}"))
   }
 }

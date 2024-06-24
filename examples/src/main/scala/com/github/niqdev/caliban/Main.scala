@@ -29,12 +29,12 @@ object Main extends IOApp {
 
   private[caliban] def server[F[_]: ConcurrentEffect: ContextShift: Timer: LogWriter]: Resource[F, Unit] =
     for {
-      _            <- Resource.liftF(LogWriter.info("Start server..."))
+      _            <- Resource.eval(LogWriter.info("Start server..."))
       xa           <- database.initH2[F]
       repositories <- Repositories.make[F](xa)
       services     <- Services.make[F](repositories)
       api          <- Resolvers.make[F](services)
-      interpreter  <- Resource.liftF(api.interpreterAsync)
+      interpreter  <- Resource.eval(api.interpreterAsync)
       httpApp = Router(
         "/api/graphql" -> Http4sAdapter.makeHttpServiceF(interpreter)
       ).orNotFound

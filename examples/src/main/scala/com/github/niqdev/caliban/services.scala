@@ -201,6 +201,6 @@ object services {
       }
 
     def make[F[_]: Sync](repos: Repositories[F]) =
-      Resource.liftF(Sync[F].delay(apply[F](repos)))
+      Resource.eval(Sync[F].delay(apply[F](repos)))
   }
 }
